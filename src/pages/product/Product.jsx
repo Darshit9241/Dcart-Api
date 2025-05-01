@@ -141,18 +141,10 @@ export default function Product({ onCartClick, onCartOpen }) {
       if (itemIndex !== -1) {
         dispatch(removeItem({ index: itemIndex }));
         setCartItems(cartItems.filter(id => id !== product.id));
-        toast.info(`${product.name} removed from cart`);
       }
     } else {
       dispatch(addItem({ ...product, quantity: 1 }));
       setCartItems([...cartItems, product.id]);
-      toast.success(`${product.name} added to cart`);
-      
-      // Optional: Open the cart after adding the item
-      if (onCartClick && onCartOpen) {
-        onCartClick();
-        onCartOpen();
-      }
     }
   };
 
@@ -271,12 +263,12 @@ export default function Product({ onCartClick, onCartOpen }) {
         ) : (
           <>
             {sortedProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-xl shadow-sm">
+              <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow-sm">
                 <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <h3 className="text-xl font-medium text-gray-700 mb-2 text-center">No products found</h3>
-                <p className="text-gray-500 text-center max-w-md px-4">
+                <h3 className="text-xl font-medium text-gray-700 mb-2">No products found</h3>
+                <p className="text-gray-500 text-center max-w-md">
                   {searchTerm 
                     ? `No products matching "${searchTerm}" in ${selectedCategory !== 'All' ? selectedCategory : 'any'} category.` 
                     : `No products available in ${selectedCategory} category.`}
@@ -363,13 +355,9 @@ export default function Product({ onCartClick, onCartOpen }) {
 
                         <button
                           onClick={() => handleAddToCart(product)}
-                          className={`m-3 rounded-2xl absolute bottom-0 left-0 right-0 ${cartItems.includes(product.id) ? 'bg-black' : 'bg-black'} text-white py-4 text-center font-medium transform translate-y-0 group-hover:translate-y-0 transition-transform duration-300 z-10`}
-                          style={{ touchAction: 'manipulation' }}
-                          aria-label={cartItems.includes(product.id) ? 'Remove from Cart' : 'Add to Cart'}
+                          className={`m-3 rounded-2xl absolute bottom-0 left-0 right-0 ${cartItems.includes(product.id) ? 'bg-black' : 'bg-black'} text-white py-3 text-center font-medium transform translate-y-0 group-hover:translate-y-0 transition-transform duration-300`}
                         >
-                          <span className="block px-4 py-1">
-                            {cartItems.includes(product.id) ? 'Remove from Cart' : 'Add to Cart'}
-                          </span>
+                          {cartItems.includes(product.id) ? 'Remove from Cart' : 'Add to Cart'}
                         </button>
                       </div>
 
@@ -522,13 +510,9 @@ export default function Product({ onCartClick, onCartOpen }) {
                       handleAddToCart(selectedProduct);
                       closeModal();
                     }}
-                    className="w-full bg-black text-white py-5 rounded-xl font-medium hover:bg-gray-800 transition-colors duration-200 text-lg z-10"
-                    style={{ touchAction: 'manipulation' }}
-                    aria-label={cartItems.includes(selectedProduct.id) ? 'Remove from Cart' : 'Add to Cart'}
+                    className="w-full bg-black text-white py-4 rounded-xl font-medium hover:bg-gray-800 transition-colors duration-200"
                   >
-                    <span className="block px-4 py-1">
-                      {cartItems.includes(selectedProduct.id) ? 'Remove from Cart' : 'Add to Cart'}
-                    </span>
+                    {cartItems.includes(selectedProduct.id) ? 'Remove from Cart' : 'Add to Cart'}
                   </button>
                 </div>
               </div>
