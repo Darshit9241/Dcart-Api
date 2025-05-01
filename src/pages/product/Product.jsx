@@ -226,7 +226,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                       className={`whitespace-nowrap px-5 py-2 mx-1 text-sm transition-all duration-300 border-b-2 ${
                         isSelected 
                         ? 'border-black text-black font-medium' 
-                        : 'border-transparent text-gray-500 border-gray-200'
+                        : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-200'
                       }`}
                     >
                       {category}
@@ -246,7 +246,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                   <span>Filtered by {selectedCategory}</span>
                   <button 
                     onClick={() => handleCategoryChange("All")}
-                    className="text-black underline text-xs"
+                    className="text-black hover:text-gray-700 underline text-xs"
                   >
                     Reset
                   </button>
@@ -280,7 +280,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                   const isWished = wishlist.some(item => item.id === product.id);
 
                   return (
-                    <div key={product.id} className="group bg-white rounded-2xl shadow-sm transition-all duration-300 overflow-hidden">
+                    <div key={product.id} className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
 
                       <div className="relative">
                         <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-2xl">
@@ -288,7 +288,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                             onClick={() => navigate(`/product/${product.id}`)}
                             src={product.imgSrc}
                             alt={product.alt || product.name}
-                            className="w-full h-[300px] object-cover transition-transform duration-300 cursor-pointer"
+                            className="w-full h-[300px] object-cover transform group-hover:scale-105 transition-transform duration-300 cursor-pointer"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = "https://via.placeholder.com/300?text=Product+Image";
@@ -300,7 +300,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                         <div className="absolute top-4 right-4 flex flex-col gap-2">
                           <button
                             onClick={() => toggleFavorite(product)}
-                            className={`p-2 rounded-full bg-white/80 backdrop-blur-sm transition-all duration-200 ${isWished ? 'text-red-500' : 'text-gray-600'
+                            className={`p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 ${isWished ? 'text-red-500' : 'text-gray-600'
                               }`}
                           >
                             {isWished ? <FaHeart className="text-xl" /> : <FaRegHeart className="text-xl" />}
@@ -308,14 +308,14 @@ export default function Product({ onCartClick, onCartOpen }) {
 
                           <button
                             onClick={() => handleViewDetails(product)}
-                            className="p-2 rounded-full bg-white/80 backdrop-blur-sm text-gray-600 transition-all duration-200"
+                            className="p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-gray-600 transition-all duration-200"
                           >
                             <HiOutlineViewGrid className="text-xl" />
                           </button>
 
                           <button
                             onClick={() => toggleCompare(product)}
-                            className={`p-2 rounded-full bg-white/80 backdrop-blur-sm transition-all duration-200 ${compareList.some(item => item.id === product.id) ? 'text-blue-500' : 'text-gray-600'
+                            className={`p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 ${compareList.some(item => item.id === product.id) ? 'text-blue-500' : 'text-gray-600'
                               }`}
                           >
                             <FaCodeCompare className="text-xl" />
@@ -325,13 +325,13 @@ export default function Product({ onCartClick, onCartOpen }) {
                             <>
                               <button
                                 onClick={() => handleEditProduct(product)}
-                                className="p-2 rounded-full bg-white/80 backdrop-blur-sm text-gray-600 transition-all duration-200"
+                                className="p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-gray-600 transition-all duration-200"
                               >
                                 <FiEdit className="text-xl" />
                               </button>
                               <button
                                 onClick={() => handleRemoveProduct(product.id)}
-                                className={`p-2 rounded-full bg-white/80 backdrop-blur-sm transition-all duration-200
+                                className={`p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200
                                     ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}
                                     }`}
                                 disabled={isDeleting}
@@ -355,7 +355,7 @@ export default function Product({ onCartClick, onCartOpen }) {
 
                         <button
                           onClick={() => handleAddToCart(product)}
-                          className={`m-3 rounded-2xl absolute bottom-0 left-0 right-0 ${cartItems.includes(product.id) ? 'bg-black' : 'bg-black'} text-white py-3 text-center font-medium transition-transform duration-300`}
+                          className={`m-3 rounded-2xl absolute bottom-0 left-0 right-0 ${cartItems.includes(product.id) ? 'bg-black' : 'bg-black'} text-white py-3 text-center font-medium transform translate-y-0 group-hover:translate-y-0 transition-transform duration-300`}
                         >
                           {cartItems.includes(product.id) ? 'Remove from Cart' : 'Add to Cart'}
                         </button>
@@ -390,13 +390,13 @@ export default function Product({ onCartClick, onCartOpen }) {
                         <div className="absolute top-2 left-2 flex gap-2">
                           <button
                             onClick={() => handleEditProduct(product)}
-                            className="p-1.5 bg-blue-500 text-white rounded-full transition-colors duration-200"
+                            className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200"
                           >
                             <FiEdit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleRemoveProduct(product.id)}
-                            className={`p-1.5 bg-black text-white rounded-full transition-colors duration-200 ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors duration-200 ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
                             disabled={isDeleting}
                           >
                             {isDeleting ? (
@@ -424,7 +424,7 @@ export default function Product({ onCartClick, onCartOpen }) {
             <div className="relative">
               <button
                 onClick={closeModal}
-                className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 transition-colors duration-200"
+                className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -437,7 +437,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                     closeModal();
                     handleEditProduct(selectedProduct);
                   }}
-                  className="absolute top-4 left-4 p-2 rounded-full bg-blue-500 text-white transition-colors duration-200"
+                  className="absolute top-4 left-4 p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200"
                 >
                   <FiEdit className="w-5 h-5" />
                 </button>
@@ -510,7 +510,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                       handleAddToCart(selectedProduct);
                       closeModal();
                     }}
-                    className="w-full bg-black text-white py-4 rounded-xl font-medium transition-colors duration-200"
+                    className="w-full bg-black text-white py-4 rounded-xl font-medium hover:bg-gray-800 transition-colors duration-200"
                   >
                     {cartItems.includes(selectedProduct.id) ? 'Remove from Cart' : 'Add to Cart'}
                   </button>
