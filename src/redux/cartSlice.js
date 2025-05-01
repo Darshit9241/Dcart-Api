@@ -1,11 +1,21 @@
 import { createSlice } from '@reduxjs/toolkit';
-const savedCart = JSON.parse(localStorage.getItem('cartItems')) || {
-  items: [],
-  totalPrice: 0,
+
+const getCartKey = () => {
+  const userEmail = localStorage.getItem('userEmail');
+  return userEmail ? `cartItems_${userEmail}` : 'cartItems_guest';
 };
+
+const getInitialState = () => {
+  const cartKey = getCartKey();
+  return JSON.parse(localStorage.getItem(cartKey)) || {
+    items: [],
+    totalPrice: 0,
+  };
+};
+
 const cartSlice = createSlice({
   name: 'cart',
-  initialState: savedCart,
+  initialState: getInitialState(),
   reducers: {
     addItem: (state, action) => {
       const { id, price, quantity } = action.payload;
@@ -20,7 +30,7 @@ const cartSlice = createSlice({
         state.totalPrice += price * quantity;
       }
     
-      localStorage.setItem('cartItems', JSON.stringify(state));
+      localStorage.setItem(getCartKey(), JSON.stringify(state));
     },
     
     removeItem: (state, action) => {
@@ -30,7 +40,7 @@ const cartSlice = createSlice({
         state.totalPrice -= item.price * item.quantity;
         state.items.splice(index, 1);
       }
-      localStorage.setItem('cartItems', JSON.stringify(state));
+      localStorage.setItem(getCartKey(), JSON.stringify(state));
     },
     
     updateQuantity: (state, action) => {
@@ -40,7 +50,7 @@ const cartSlice = createSlice({
         state.totalPrice += (quantity - item.quantity) * item.price;
         item.quantity = quantity;
       }
-      localStorage.setItem('cartItems', JSON.stringify(state));
+      localStorage.setItem(getCartKey(), JSON.stringify(state));
     },
     
     incrementQuantity: (state, action) => {
@@ -50,7 +60,7 @@ const cartSlice = createSlice({
         item.quantity += 1;
         state.totalPrice += item.price;
       }
-      localStorage.setItem('cartItems', JSON.stringify(state));
+      localStorage.setItem(getCartKey(), JSON.stringify(state));
     },
     
     decrementQuantity: (state, action) => {
@@ -60,18 +70,31 @@ const cartSlice = createSlice({
         item.quantity -= 1;
         state.totalPrice -= item.price;
       }
-      localStorage.setItem('cartItems', JSON.stringify(state));
+      localStorage.setItem(getCartKey(), JSON.stringify(state));
     },
     
     clearCart: (state) => {
       state.items = [];
       state.totalPrice = 0;
-      localStorage.setItem('cartItems', JSON.stringify(state));
+      localStorage.setItem(getCartKey(), JSON.stringify(state));
     },
     
+    refreshCart: (state) => {
+      const newState = getInitialState();
+      state.items = newState.items;
+      state.totalPrice = newState.totalPrice;
+    }
   },
 });
 
-export const { addItem, removeItem, updateQuantity, incrementQuantity, decrementQuantity,clearCart } = cartSlice.actions;
+export const { 
+  addItem, 
+  removeItem, 
+  updateQuantity, 
+  incrementQuantity, 
+  decrementQuantity, 
+  clearCart,
+  refreshCart 
+} = cartSlice.actions;
 
 export default cartSlice.reducer;

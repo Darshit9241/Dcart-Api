@@ -1,6 +1,6 @@
 import React from 'react';
-import { FiAlertCircle, FiTrash2, FiRefreshCw, FiEye, FiEyeOff } from 'react-icons/fi';
-import { FaSearch, FaUser, FaUserCircle, FaKey, FaShoppingBag } from 'react-icons/fa';
+import { FiAlertCircle, FiTrash2, FiRefreshCw, FiEye, FiEyeOff, FiClock } from 'react-icons/fi';
+import { FaSearch, FaUser, FaUserCircle, FaKey, FaShoppingBag, FaSignInAlt } from 'react-icons/fa';
 
 const CustomerManagement = ({
   users,
@@ -85,6 +85,38 @@ const CustomerManagement = ({
                   <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
                     Joined: {new Date(user.dateJoined).toLocaleDateString()}
                   </span>
+                </div>
+                
+                {/* Login Information Section */}
+                <div className={`text-xs p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} mb-2`}>
+                  <div className="flex items-center mb-1">
+                    <FaSignInAlt className="h-3 w-3 mr-1 text-orange-500" />
+                    <span>Login Information</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div className={`p-1 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                      <div className="flex items-center mb-1">
+                        <FiClock className="h-3 w-3 mr-1 text-blue-500" />
+                        <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Last Login</span>
+                      </div>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never logged in'}
+                      </p>
+                    </div>
+                    <div className={`p-1 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                      <div className="flex items-center mb-1">
+                        <FaUser className="h-3 w-3 mr-1 text-blue-500" />
+                        <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Login Status</span>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs inline-block ${
+                        user.isLoggedIn 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {user.isLoggedIn ? 'Online' : 'Offline'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Password Section */}

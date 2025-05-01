@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FaShoppingBag, FaHeart } from "react-icons/fa";
 import { IoMdGitCompare } from "react-icons/io";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from './ThemeContext';
+import { refreshCart } from '../../redux/cartSlice';
+import { refreshWishlist } from '../../redux/wishlistSlice';
+import { refreshCompare } from '../../redux/compareSlice';
 
 const QuickActions = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
+  // Get authentication status from Redux
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   
   // Get cart items count from Redux
   const cartItems = useSelector((state) => state.cart.items);
@@ -20,6 +27,13 @@ const QuickActions = () => {
   // Get compare items count from Redux
   const compareItems = useSelector((state) => state.compare);
   const compareCount = compareItems.length;
+
+  // Refresh user-specific data when component mounts or auth status changes
+  useEffect(() => {
+    dispatch(refreshCart());
+    dispatch(refreshWishlist());
+    dispatch(refreshCompare());
+  }, [dispatch, isAuthenticated]);
 
   const handleCartClick = () => {
     const token = localStorage.getItem("token");

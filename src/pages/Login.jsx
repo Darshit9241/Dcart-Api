@@ -3,6 +3,8 @@ import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { FiMail, FiLock, FiLoader } from 'react-icons/fi';
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/authSlice';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -11,6 +13,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -56,8 +59,11 @@ export default function Login() {
           duration: 3000,
         });
         
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userEmail", email);
+        // Dispatch login action to Redux store
+        dispatch(login({
+          token: response.data.token,
+          userEmail: email
+        }));
         
         // Handle user photo from response
         if (response.data.user && response.data.user.photo) {

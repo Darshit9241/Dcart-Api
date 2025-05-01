@@ -1,9 +1,15 @@
 // redux/compareSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
-const getInitialCompare = () => {
+const getCompareKey = () => {
+  const userEmail = localStorage.getItem('userEmail');
+  return userEmail ? `compareItems_${userEmail}` : 'compareItems_guest';
+};
+
+const getInitialState = () => {
   if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("compareItems");
+    const compareKey = getCompareKey();
+    const stored = localStorage.getItem(compareKey);
     return stored ? JSON.parse(stored) : [];
   }
   return [];
@@ -11,29 +17,37 @@ const getInitialCompare = () => {
 
 const compareSlice = createSlice({
   name: "compare",
-  initialState: getInitialCompare(),
+  initialState: getInitialState(),
   reducers: {
     addToCompare: (state, action) => {
       const exists = state.find((item) => item.id === action.payload.id);
       if (!exists && state.length < 4) {
         state.push(action.payload);
-        localStorage.setItem("compareItems", JSON.stringify(state));
+        localStorage.setItem(getCompareKey(), JSON.stringify(state));
       }
     },
     removeFromCompare: (state, action) => {
       const updated = state.filter((item) => item.id !== action.payload.id);
-      localStorage.setItem("compareItems", JSON.stringify(updated));
+      localStorage.setItem(getCompareKey(), JSON.stringify(updated));
       return updated;
     },
     clearCompare: () => {
-      localStorage.removeItem("compareItems");
+      localStorage.removeItem(getCompareKey());
       return [];
     },
+    refreshCompare: () => {
+      return getInitialState();
+    }
   },
 });
 
-// ✅ Export these actions
-export const { addToCompare, removeFromCompare, clearCompare } = compareSlice.actions;
+// Export these actions
+export const { 
+  addToCompare, 
+  removeFromCompare, 
+  clearCompare,
+  refreshCompare 
+} = compareSlice.actions;
 
-// ✅ Export the reducer
+// Export the reducer
 export default compareSlice.reducer;

@@ -74,6 +74,18 @@ const useOrders = () => {
     }
   }, [orders]);
 
+  const deleteAllOrders = () => {
+    try {
+      // Clear orders from localStorage
+      localStorage.setItem('orders', JSON.stringify([]));
+      setOrders([]);
+      toast.success('All orders have been deleted');
+    } catch (error) {
+      console.error('Error deleting all orders:', error);
+      toast.error('Failed to delete all orders');
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
@@ -83,7 +95,8 @@ const useOrders = () => {
     loading, 
     error, 
     setError,
-    updateOrderStatus
+    updateOrderStatus,
+    deleteAllOrders
   };
 };
 
@@ -280,21 +293,49 @@ const useProducts = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    setLoading(true);
-    try {
-      // If Redux store has products, use those
-      if (reduxProducts && reduxProducts.length > 0) {
-        setProducts(reduxProducts);
-      } else {
-        // Otherwise use default products from the data file
-        setProducts(defaultProducts);
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        // Fetch products from the API
+        const response = await fetch('https://6812f392129f6313e20fe2b3.mockapi.io/getproduct/product');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch products from API');
+        }
+        
+        const apiProducts = await response.json();
+        
+        // Process API products to match expected format
+        const formattedProducts = apiProducts.map(item => ({
+          id: item.id,
+          name: item.productname || item.name,
+          imgSrc: item.productimage,
+          image: item.productimage,
+          price: parseFloat(item.newprice) || 0,
+          oldPrice: parseFloat(item.oldprice) || 0,
+          description: item.discription,
+          discount: item.discount,
+          email: item.email
+        }));
+        
+        setProducts(formattedProducts);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products from API. Using fallback data.');
+        
+        // Fallback to Redux products or default products
+        if (reduxProducts && reduxProducts.length > 0) {
+          setProducts(reduxProducts);
+        } else {
+          setProducts(defaultProducts);
+        }
+      } finally {
+        setLoading(false);
       }
-      setError(null);
-    } catch (err) {
-      setError('Failed to load products. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
+    };
+    
+    fetchProducts();
   }, [reduxProducts]);
 
   const deleteProduct = useCallback((productId) => {
@@ -406,7 +447,8 @@ const AdminDashboardContent = () => {
     orders, 
     loading: ordersLoading, 
     error: ordersError, 
-    updateOrderStatus 
+    updateOrderStatus,
+    deleteAllOrders
   } = useOrders();
   
   const {
@@ -671,6 +713,10 @@ const AdminDashboardContent = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showProfileDropdown]);
+
+  const handleDeleteAllOrders = () => {
+    deleteAllOrders();
+  };
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
@@ -988,6 +1034,7 @@ const AdminDashboardContent = () => {
                     setViewOrderDetails={setViewOrderDetails}
                     getStatusColor={getStatusColor}
                     currentCurrency={currentCurrency}
+                    handleDeleteAllOrders={handleDeleteAllOrders}
                   />
                 )}
                 

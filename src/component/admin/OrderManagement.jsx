@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { FiPackage, FiAlertCircle, FiInfo, FiShoppingBag, FiX, FiCheck, FiDollarSign, FiClock } from 'react-icons/fi';
+import React, { useMemo, useState } from 'react';
+import { FiPackage, FiAlertCircle, FiInfo, FiShoppingBag, FiX, FiCheck, FiDollarSign, FiClock, FiMail, FiCalendar, FiTrash2 } from 'react-icons/fi';
 import { FaSearch, FaUser } from 'react-icons/fa';
 import { getCurrencySymbol } from '../../utils/currencyUtils';
 
@@ -17,14 +17,27 @@ const OrderManagement = ({
   handleCompleteOrder,
   setViewOrderDetails,
   getStatusColor,
-  currentCurrency
+  currentCurrency,
+  handleDeleteAllOrders
 }) => {
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  
   // Status badge component for reuse
   const StatusBadge = ({ status }) => (
     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(status || '')}`}>
       {status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'}
     </span>
   );
+  
+  // Sort orders by date (newest first)
+  const sortedOrders = useMemo(() => {
+    if (!orders) return [];
+    return [...orders].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateB - dateA; // Sort descending (newest first)
+    });
+  }, [orders]);
   
   // Calculate statistics for the dashboard
   const stats = useMemo(() => {
@@ -87,6 +100,21 @@ const OrderManagement = ({
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
+          
+          {orders && orders.length > 0 && (
+            <button
+              onClick={() => setShowDeleteConfirmation(true)}
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg ${
+                isDarkMode 
+                  ? 'bg-red-600 hover:bg-red-700 text-white' 
+                  : 'bg-red-500 hover:bg-red-600 text-white'
+              } transition-colors`}
+              title="Delete All Orders"
+            >
+              <FiTrash2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Delete All</span>
+            </button>
+          )}
         </div>
       </div>
       
@@ -146,7 +174,7 @@ const OrderManagement = ({
           </div>
           
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {orders.map((order) => (
+            {sortedOrders.map((order) => (
               <div key={order.id} className="p-4 transition-colors">
                 <div className="flex flex-wrap md:flex-nowrap items-center justify-between">
                   <div className="flex items-center space-x-4 w-full md:w-auto mb-3 md:mb-0">
@@ -171,13 +199,19 @@ const OrderManagement = ({
                         <span className="font-medium">Order #{order.id}</span>
                         <StatusBadge status={order.status} />
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1 flex-wrap">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 flex flex-col mt-1">
                         <div className="flex items-center">
                           <FaUser className="h-3 w-3 mr-1" />
                           <span>{order.userInfo.name}</span>
                         </div>
-                        <span className="mx-2 hidden md:inline">•</span>
-                        <span>{new Date(order.date).toLocaleDateString()}</span>
+                        <div className="flex items-center text-sm">
+                          <FiMail className="h-3 w-3 mr-1" />
+                          <span>{order.userInfo.email}</span>
+                        </div>
+                        <div className="flex items-center mt-1">
+                          <FiCalendar className="h-3 w-3 mr-1" />
+                          <span>{new Date(order.date).toLocaleDateString()}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -232,7 +266,7 @@ const OrderManagement = ({
       
       {/* Mobile view for smaller screens */}
       <div className="sm:hidden mt-4 space-y-4">
-        {!loading && !error && orders.length > 0 && orders.map((order) => (
+        {!loading && !error && sortedOrders.length > 0 && sortedOrders.map((order) => (
           <div key={order.id} className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-white'} shadow`}>
             <div className="flex justify-between items-center mb-3">
               <span className="font-medium">#{order.id}</span>
@@ -244,7 +278,12 @@ const OrderManagement = ({
                 <FaUser className="h-4 w-4 mr-2 text-gray-400" />
                 <span>{order.userInfo.name}</span>
               </div>
+              <div className="flex items-center text-sm">
+                <FiMail className="h-4 w-4 mr-2 text-gray-400" />
+                <span>{order.userInfo.email}</span>
+              </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">
+                <FiCalendar className="h-4 w-4 mr-2 text-gray-400 inline" />
                 {new Date(order.date).toLocaleDateString()}
               </div>
               <div className="flex justify-between">
@@ -292,6 +331,43 @@ const OrderManagement = ({
           </div>
         ))}
       </div>
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 max-w-md w-full`}>
+            <div className="text-center mb-4">
+              <FiAlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold mb-2">Delete All Orders</h3>
+              <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Are you sure you want to delete all orders? This action cannot be undone.
+              </p>
+            </div>
+            
+            <div className="flex justify-center gap-4 mt-6">
+              <button
+                onClick={() => setShowDeleteConfirmation(false)}
+                className={`px-4 py-2 rounded-lg ${
+                  isDarkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleDeleteAllOrders();
+                  setShowDeleteConfirmation(false);
+                }}
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white"
+              >
+                Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

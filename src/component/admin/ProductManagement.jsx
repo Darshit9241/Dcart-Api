@@ -204,9 +204,9 @@ const ProductManagement = ({
                           )}
                         </div>
                         
-                        {product.imgSrc ? (
+                        {(product.imgSrc || product.image) ? (
                           <img 
-                            src={product.imgSrc} 
+                            src={product.imgSrc || product.image} 
                             alt={product.name} 
                             className="h-full w-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                             onError={(e) => {
@@ -265,9 +265,9 @@ const ProductManagement = ({
                         className="h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 overflow-hidden rounded-lg cursor-pointer"
                         onClick={() => openFullScreenView(product)}
                       >
-                        {product.imgSrc ? (
+                        {(product.imgSrc || product.image) ? (
                           <img 
-                            src={product.imgSrc} 
+                            src={product.imgSrc || product.image} 
                             alt={product.name} 
                             className="h-full w-full object-cover"
                             onError={(e) => {
@@ -379,9 +379,9 @@ const ProductManagement = ({
               <div className="grid grid-cols-1 md:grid-cols-2">
                 {/* Product Image */}
                 <div className={`${isDarkMode ? 'bg-black' : 'bg-gray-50'} aspect-square`}>
-                  {fullScreenProduct.imgSrc ? (
+                  {(fullScreenProduct.imgSrc || fullScreenProduct.image) ? (
                     <img 
-                      src={fullScreenProduct.imgSrc} 
+                      src={fullScreenProduct.imgSrc || fullScreenProduct.image} 
                       alt={fullScreenProduct.name} 
                       className="h-full w-full object-contain"
                       onError={(e) => {

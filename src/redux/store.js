@@ -4,6 +4,7 @@ import wishlistReducer from '../redux/wishlistSlice';
 import compareReducer from '../redux/compareSlice';
 import productReducer from '../redux/productSlice';
 import currencyReducer from './currencySlice';
+import authReducer from './authSlice';
 import storage from 'redux-persist/lib/storage';
 
 import { persistStore, persistReducer } from 'redux-persist';
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   compare: compareReducer,
   products: productReducer,
   currency: currencyReducer,
+  auth: authReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

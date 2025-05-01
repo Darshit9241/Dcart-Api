@@ -26,7 +26,8 @@ const Payment = () => {
     city: '',
     state: '',
     pincode: '',
-    shippingAddress: ''
+    shippingAddress: '',
+    email: localStorage.getItem('userEmail') || ''
   });
   const [errors, setErrors] = useState({});
   const [couponCode, setCouponCode] = useState('');
@@ -97,6 +98,17 @@ const Payment = () => {
     }
   }, [paymentMethod]);
 
+  // Load user email from localStorage if available
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('userEmail');
+    if (savedEmail) {
+      setUserInfo(prev => ({
+        ...prev,
+        email: savedEmail
+      }));
+    }
+  }, []);
+
   const calculateItemTotal = (item) => {
     const price = parseFloat(item.price || 0);
     const discount = Math.abs(parseFloat(item.discount || 0));
@@ -136,10 +148,25 @@ const Payment = () => {
   };
 
   const processOrder = () => {
+    // Make sure we have the user's email
+    const email = localStorage.getItem('userEmail');
+    if (!email) {
+      toast.error('User email not found. Please log in again.');
+      setIsPlacingOrder(false);
+      return;
+    }
+    
+    // Ensure userInfo has the email
+    const orderUserInfo = {
+      ...userInfo,
+      email: email // Ensure email is added to order
+    };
+    
     const newOrder = {
       id: Math.floor(Math.random() * 100000).toString().padStart(5, '0'),
       date: new Date().toLocaleDateString('en-GB'),
-      userInfo,
+      status: 'processing', // Add explicit status
+      userInfo: orderUserInfo, // Use updated userInfo with email
       cartItems,
       totalPrice: getFinalPrice(),
       paymentMethod,
@@ -149,10 +176,20 @@ const Payment = () => {
         : getShippingCost()) : 0
     };
 
-    // Save order to localStorage
-    const existingOrders = JSON.parse(localStorage.getItem('orders')) || [];
-    const updatedOrders = [...existingOrders, newOrder];
-    localStorage.setItem('orders', JSON.stringify(updatedOrders));
+    console.log('Creating new order:', newOrder);
+
+    try {
+      // Save order to localStorage
+      const existingOrders = JSON.parse(localStorage.getItem('orders')) || [];
+      const updatedOrders = [...existingOrders, newOrder];
+      localStorage.setItem('orders', JSON.stringify(updatedOrders));
+      console.log('Order saved successfully. Total orders:', updatedOrders.length);
+    } catch (error) {
+      console.error('Error saving order to localStorage:', error);
+      toast.error('Could not save your order. Please try again.');
+      setIsPlacingOrder(false);
+      return;
+    }
 
     setTimeout(() => {
       setOrderDetails(newOrder);

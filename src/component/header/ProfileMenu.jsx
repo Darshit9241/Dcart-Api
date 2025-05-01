@@ -3,6 +3,8 @@ import { CgProfile } from "react-icons/cg";
 import { FaSignInAlt, FaUserPlus, FaSignOutAlt, FaTicketAlt, FaCamera } from "react-icons/fa";
 import { FiPackage } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { logout } from '../../redux/authSlice';
 // import { useTheme } from './ThemeContext';
 
 const ProfileMenu = ({ 
@@ -12,6 +14,7 @@ const ProfileMenu = ({
   triggerFileInput 
 }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const userEmail = localStorage.getItem("userEmail");
   const username = userEmail ? userEmail.split("@")[0] : null;
   // const { isDarkMode } = useTheme();
@@ -28,12 +31,14 @@ const ProfileMenu = ({
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userEmail");
+    // Dispatch logout action to Redux store
+    dispatch(logout());
+    
+    // Remove profile image from local storage
     localStorage.removeItem("profileImage");
+    
     navigate("/login");
     toggleMenu();
-    window.location.reload();
   };
 
   const navigateTo = (path) => {
@@ -46,6 +51,7 @@ const ProfileMenu = ({
       <button
         className="flex items-center space-x-1 group"
         onClick={toggleMenu}
+        data-profile-button
       >
         {profileImage ? (
           <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200 hover:border-orange-500 transition-colors duration-300">
