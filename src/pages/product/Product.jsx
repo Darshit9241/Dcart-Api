@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { FaCodeCompare } from "react-icons/fa6";
 import { HiOutlineViewGrid } from "react-icons/hi";
+import { FiEdit } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
 import { addItem, removeItem } from '../../redux/cartSlice';
@@ -29,6 +30,7 @@ export default function Product({ onCartClick, onCartOpen }) {
   const [cartItems, setCartItems] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [editMode, setEditMode] = useState(false);
 
   // Get product data and loading state from API context
   const { 
@@ -174,6 +176,10 @@ export default function Product({ onCartClick, onCartOpen }) {
   // Sort products by id in descending order (newest first)
   const sortedProducts = [...filteredProducts].sort((a, b) => b.id - a.id);
 
+  const handleEditProduct = (product) => {
+    navigate(`/edit-product/${product.id}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -318,19 +324,27 @@ export default function Product({ onCartClick, onCartOpen }) {
                           </button>
 
                           {localStorage.getItem("userEmail") === "test1278@gmail.com" && (
-                            <button
-                              onClick={() => handleRemoveProduct(product.id)}
-                              className={`p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200
-                                  ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}
-                                  }`}
-                              disabled={isDeleting}
-                            >
-                              {isDeleting ? (
-                                <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
-                              ) : (
-                                <IoIosCloseCircle className="text-xl" />
-                              )}
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleEditProduct(product)}
+                                className="p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-gray-600 transition-all duration-200"
+                              >
+                                <FiEdit className="text-xl" />
+                              </button>
+                              <button
+                                onClick={() => handleRemoveProduct(product.id)}
+                                className={`p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200
+                                    ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}
+                                    }`}
+                                disabled={isDeleting}
+                              >
+                                {isDeleting ? (
+                                  <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                  <IoIosCloseCircle className="text-xl" />
+                                )}
+                              </button>
+                            </>
                           )}
 
                         </div>
@@ -375,19 +389,27 @@ export default function Product({ onCartClick, onCartOpen }) {
                       </div>
 
                       {localStorage.getItem("userEmail") === "test1278@gmail.com" && (
-                        <button
-                          onClick={() => handleRemoveProduct(product.id)}
-                          className={`absolute top-2 left-2 p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors duration-200 ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          )}
-                        </button>
+                        <div className="absolute top-2 left-2 flex gap-2">
+                          <button
+                            onClick={() => handleEditProduct(product)}
+                            className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200"
+                          >
+                            <FiEdit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleRemoveProduct(product.id)}
+                            className={`p-1.5 bg-black text-white rounded-full hover:bg-gray-800 transition-colors duration-200 ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={isDeleting}
+                          >
+                            {isDeleting ? (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
@@ -410,6 +432,18 @@ export default function Product({ onCartClick, onCartOpen }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+
+              {localStorage.getItem("userEmail") === "test1278@gmail.com" && (
+                <button
+                  onClick={() => {
+                    closeModal();
+                    handleEditProduct(selectedProduct);
+                  }}
+                  className="absolute top-4 left-4 p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200"
+                >
+                  <FiEdit className="w-5 h-5" />
+                </button>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
                 <div className="bg-gray-50 rounded-xl p-6 flex items-center justify-center">

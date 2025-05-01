@@ -174,4 +174,34 @@ export const deleteProduct = async (productId) => {
     console.error(`Error deleting product with ID ${productId}:`, error);
     throw error;
   }
+};
+
+/**
+ * Update an existing product via API
+ * @param {string} productId - ID of the product to update
+ * @param {Object} productData - Updated product data
+ * @returns {Promise<Object>} - The updated product
+ */
+export const updateProduct = async (productId, productData) => {
+  try {
+    const formattedData = formatProductForApi(productData);
+    
+    const response = await fetch(`${PRODUCTS_ENDPOINT}/${productId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formattedData),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update product');
+    }
+    
+    const data = await response.json();
+    return formatProduct(data);
+  } catch (error) {
+    console.error(`Error updating product with ID ${productId}:`, error);
+    throw error;
+  }
 }; 

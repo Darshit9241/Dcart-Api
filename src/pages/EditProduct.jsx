@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { addProduct } from '../redux/productSlice';
-import { useNavigate } from 'react-router-dom';
-import { createProduct } from '../utils/api';
+import { updateProduct as updateProductRedux } from '../redux/productSlice';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useApi } from '../context/ApiContext';
 import { getProductCategories } from '../utils/categoryUtils';
 
-const AddProduct = () => {
+const EditProduct = () => {
+    const { productId } = useParams();
     const [formData, setFormData] = useState({
         name: '',
         price: '',
@@ -21,19 +21,17 @@ const AddProduct = () => {
         availability: '',
     });
     const dispatch = useDispatch();
-    const { addNewProduct, refreshData } = useApi();
+    const { getProductById, updateProduct } = useApi();
 
     const [preview, setPreview] = useState(null);
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
 
     // State for dropdowns
     const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-    const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
     const [availabilityDropdownOpen, setAvailabilityDropdownOpen] = useState(false);
     const categoryDropdownRef = useRef(null);
-    const currencyDropdownRef = useRef(null);
     const availabilityDropdownRef = useRef(null);
-    const currentCurrency = useSelector((state) => state.currency.currentCurrency);
 
     // Loading state
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,30 +50,15 @@ const AddProduct = () => {
         "Discontinued"
     ];
 
-    // Currency options with symbols
-    const currencies = [
-        { code: 'USD', symbol: '$', name: 'US Dollar' },
-        { code: 'EUR', symbol: '€', name: 'Euro' },
-        { code: 'GBP', symbol: '£', name: 'British Pound' },
-        { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-        { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-        { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-        { code: 'RUB', symbol: '₽', name: 'Russian Ruble' },
-        { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-        { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-        { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
-    ];
-
+    // Load product data when component mounts
     useEffect(() => {
         window.scrollTo(0, 0);
+        loadProductData();
 
         // Close dropdown when clicking outside
         const handleClickOutside = (event) => {
             if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
                 setCategoryDropdownOpen(false);
-            }
-            if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
-                setCurrencyDropdownOpen(false);
             }
             if (availabilityDropdownRef.current && !availabilityDropdownRef.current.contains(event.target)) {
                 setAvailabilityDropdownOpen(false);
@@ -86,12 +69,42 @@ const AddProduct = () => {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, []);
+    }, [productId]);
 
-    // Helper function to get currency symbol
-    const getCurrencySymbol = (code) => {
-        const currency = currencies.find(c => c.code === code);
-        return currency ? currency.symbol : '$';
+    const loadProductData = async () => {
+        try {
+            setLoading(true);
+            // Get product from the context
+            const product = getProductById(productId);
+            
+            if (!product) {
+                toast.error("Product not found");
+                navigate('/product');
+                return;
+            }
+
+            // Set the form data with the product details
+            setFormData({
+                name: product.name || '',
+                price: product.price ? product.price.toString() : '',
+                oldPrice: product.oldPrice ? product.oldPrice.toString() : '',
+                discount: product.discount || '',
+                description: product.description || '',
+                category: product.category || '',
+                categories: initializeCategories(product),
+                availability: product.availability || '',
+                currency: 'USD', // Default
+                photo: null,
+            });
+
+            // Set preview image
+            setPreview(product.imgSrc);
+        } catch (error) {
+            console.error("Error loading product:", error);
+            toast.error("Error loading product details");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleChange = (e) => {
@@ -102,9 +115,6 @@ const AddProduct = () => {
             if (file) {
                 setFormData({ ...formData, photo: file });
                 setPreview(URL.createObjectURL(file));
-            } else {
-                setFormData({ ...formData, photo: null });
-                setPreview(null);
             }
         } else if (name === 'discount') {
             // Remove any non-numeric characters except for dash at the beginning
@@ -119,30 +129,6 @@ const AddProduct = () => {
             if (numericValue === '' || numericValue === '-') {
                 setFormData({ ...formData, discount: '' });
                 return;
-            }
-
-            // Convert to number and check if discount makes sense
-            const discountValue = parseInt(numericValue);
-
-            // Check if we have both price and oldPrice to validate discount
-            if (formData.price && formData.oldPrice) {
-                const price = parseFloat(formData.price);
-                const oldPrice = parseFloat(formData.oldPrice);
-
-                // Calculate what percentage discount would make new price = price
-                const maxDiscount = Math.floor((oldPrice - price) / oldPrice * 100);
-
-                // Ensure old price is higher than new price
-                if (oldPrice <= price) {
-                    toast.error("Old price must be higher than new price for a discount to be valid.");
-                    return;
-                }
-
-                // Check if the discount is too high or negative
-                if (discountValue > maxDiscount) {
-                    toast.error(`Discount cannot be more than ${maxDiscount}%. This would make the new price lower than specified price.`);
-                    return;
-                }
             }
 
             // Format with percentage sign
@@ -177,8 +163,9 @@ const AddProduct = () => {
         setUploadError(null);
 
         try {
-            const base64Image = await fileToBase64(formData.photo);
-            const newProduct = {
+            // Prepare updated product data
+            const updatedProduct = {
+                id: productId,
                 name: formData.name,
                 price: parseFloat(formData.price),
                 oldPrice: parseFloat(formData.oldPrice),
@@ -186,38 +173,30 @@ const AddProduct = () => {
                 description: formData.description,
                 category: formData.category,
                 categories: formData.categories,
-                currency: formData.currency,
                 availability: formData.availability,
-                imgSrc: base64Image,
                 alt: formData.name,
             };
 
-            // Add to Redux for immediate UI update
-            dispatch(addProduct({
-                id: Date.now(), // Temporary ID for Redux
-                ...newProduct
-            }));
+            // If there's a new photo, convert it to base64
+            if (formData.photo) {
+                updatedProduct.imgSrc = await fileToBase64(formData.photo);
+            } else {
+                // Keep the existing image
+                updatedProduct.imgSrc = preview;
+            }
 
-            // Send to API via context
-            await addNewProduct(newProduct);
-            toast.success("Product uploaded successfully and added to API!");
+            // Update product in API
+            await updateProduct(productId, updatedProduct);
             
-            setFormData({
-                name: '',
-                price: '',
-                oldPrice: '',
-                discount: '',
-                description: '',
-                category: '',
-                categories: [],
-                currency: 'USD',
-                availability: '',
-                photo: null,
-            });
-            setPreview("");
+            // Update Redux state
+            dispatch(updateProductRedux(updatedProduct));
+            
+            toast.success("Product updated successfully!");
+            
+            // Navigate back to products page
             navigate('/product');
         } catch (error) {
-            const errorMessage = error.message || "Failed to upload product";
+            const errorMessage = error.message || "Failed to update product";
             toast.error(errorMessage);
             setUploadError(errorMessage);
             console.error(error);
@@ -243,6 +222,11 @@ const AddProduct = () => {
         }
     };
 
+    const handleAvailabilitySelect = (availability) => {
+        setFormData({ ...formData, availability });
+        setAvailabilityDropdownOpen(false);
+    };
+
     // For backward compatibility, also update the single category field
     useEffect(() => {
         if (formData.categories.length > 0) {
@@ -258,21 +242,41 @@ const AddProduct = () => {
         }
     }, [formData.categories]);
 
-    const handleAvailabilitySelect = (availability) => {
-        setFormData({ ...formData, availability });
-        setAvailabilityDropdownOpen(false);
+    // Add initializeCategories function
+    const initializeCategories = (product) => {
+        // If product already has a categories array, use it
+        if (product.categories && Array.isArray(product.categories)) {
+            return [...product.categories];
+        }
+        // If product has comma-separated category string, convert to array
+        else if (product.category && product.category.includes(',')) {
+            return product.category.split(',').map(cat => cat.trim());
+        }
+        // Otherwise use single category as array element
+        else if (product.category) {
+            return [product.category];
+        }
+        return [];
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex justify-center items-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-black"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white py-12 px-4 sm:px-6">
             <div className="max-w-3xl mx-auto">
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-gray-900">Add New Product</h2>
-                    <p className="mt-2 text-gray-600">Complete the form below to add a new product to your inventory</p>
+                    <h2 className="text-3xl font-bold text-gray-900">Edit Product</h2>
+                    <p className="mt-2 text-gray-600">Update the details of your product</p>
                 </div>
 
                 {uploadError && (
-                    <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 md:hidden">
+                    <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
                         <div className="flex">
                             <div className="flex-shrink-0">
                                 <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -280,7 +284,7 @@ const AddProduct = () => {
                                 </svg>
                             </div>
                             <div className="ml-3">
-                                <h3 className="text-sm font-medium text-red-800">Upload failed</h3>
+                                <h3 className="text-sm font-medium text-red-800">Update failed</h3>
                                 <div className="mt-1 text-sm text-red-700">
                                     <p>{uploadError}</p>
                                 </div>
@@ -366,13 +370,6 @@ const AddProduct = () => {
                                         ))}
                                     </div>
                                 )}
-
-                                <input
-                                    type="hidden"
-                                    name="categories"
-                                    value={formData.categories}
-                                    required
-                                />
                             </div>
 
                             {/* Add Availability Dropdown */}
@@ -442,7 +439,6 @@ const AddProduct = () => {
                                         accept="image/*"
                                         onChange={handleChange}
                                         className="hidden"
-                                        required
                                     />
 
                                     {!preview ? (
@@ -461,6 +457,10 @@ const AddProduct = () => {
                                                 src={preview}
                                                 alt="Preview"
                                                 className="w-32 h-32 object-cover rounded-lg mx-auto shadow"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = "https://via.placeholder.com/150?text=Image+Error";
+                                                }}
                                             />
                                             <div className="mt-3 flex justify-center space-x-3">
                                                 <button
@@ -491,7 +491,7 @@ const AddProduct = () => {
                                     <div>
                                         <label className="block mb-1 text-gray-700 font-medium">New Price <span className="text-red-500">*</span></label>
                                         <div className="relative">
-                                            <span className="absolute left-3 top-3 text-gray-500">{getCurrencySymbol(currentCurrency)}</span>
+                                            <span className="absolute left-3 top-3 text-gray-500">$</span>
                                             <input
                                                 type="number"
                                                 name="price"
@@ -509,7 +509,7 @@ const AddProduct = () => {
                                     <div>
                                         <label className="block mb-1 text-gray-700 font-medium">Old Price</label>
                                         <div className="relative">
-                                            <span className="absolute left-3 top-3 text-gray-500">{getCurrencySymbol(currentCurrency)}</span>
+                                            <span className="absolute left-3 top-3 text-gray-500">$</span>
                                             <input
                                                 type="number"
                                                 name="oldPrice"
@@ -540,7 +540,7 @@ const AddProduct = () => {
                                         )}
                                     </div>
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Enter a numeric value only. Old price must be higher than current price.
+                                        Enter a numeric value only. Old price must be higher than new price for a discount to be valid.
                                     </p>
                                 </div>
 
@@ -548,7 +548,7 @@ const AddProduct = () => {
                                     <div className="mt-4 bg-indigo-50 p-3 rounded-lg">
                                         <p className="text-sm text-indigo-700">
                                             <span className="font-medium">Savings: </span>
-                                            {getCurrencySymbol(currentCurrency)}{(parseFloat(formData.oldPrice) - parseFloat(formData.price)).toFixed(2)}
+                                            ${(parseFloat(formData.oldPrice) - parseFloat(formData.price)).toFixed(2)}
                                             {' '}({Math.round((1 - parseFloat(formData.price) / parseFloat(formData.oldPrice)) * 100)}% off)
                                         </p>
                                     </div>
@@ -567,6 +567,10 @@ const AddProduct = () => {
                                                     src={preview}
                                                     alt="Preview"
                                                     className="w-20 h-20 object-cover rounded-lg shadow"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = "https://via.placeholder.com/150?text=Image+Error";
+                                                    }}
                                                 />
                                             ) : (
                                                 <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -578,17 +582,7 @@ const AddProduct = () => {
 
                                             <div>
                                                 <h4 className="font-medium text-gray-800">{formData.name || "Product Name"}</h4>
-                                                <div className="flex flex-wrap gap-1 mt-1">
-                                                    {formData.categories.length > 0 ? (
-                                                        formData.categories.map((cat, index) => (
-                                                            <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                                                                {cat}
-                                                            </span>
-                                                        ))
-                                                    ) : (
-                                                        <p className="text-gray-500 text-sm">No categories selected</p>
-                                                    )}
-                                                </div>
+                                                <p className="text-gray-500 text-sm">{formData.category || "Category"}</p>
                                                 
                                                 {/* Display availability status in preview */}
                                                 {formData.availability && (
@@ -603,9 +597,9 @@ const AddProduct = () => {
                                                 )}
 
                                                 <div className="flex items-center space-x-2 mt-2">
-                                                    <span className="font-bold text-gray-900">{getCurrencySymbol(currentCurrency)}{parseFloat(formData.price || 0).toFixed(2)}</span>
+                                                    <span className="font-bold text-gray-900">${parseFloat(formData.price || 0).toFixed(2)}</span>
                                                     {formData.oldPrice && (
-                                                        <span className="text-gray-500 line-through text-sm">{getCurrencySymbol(currentCurrency)}{parseFloat(formData.oldPrice).toFixed(2)}</span>
+                                                        <span className="text-gray-500 line-through text-sm">${parseFloat(formData.oldPrice).toFixed(2)}</span>
                                                     )}
                                                     {formData.discount && (
                                                         <span className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full font-medium">
@@ -615,35 +609,44 @@ const AddProduct = () => {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <p className="text-gray-600 text-sm mt-3 line-clamp-2">{formData.description || "No description provided"}</p>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Submit Button */}
+                            <div className="pt-4">
+                                <div className="flex space-x-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate('/product')}
+                                        className="w-1/3 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting || !formData.name || !formData.price || !formData.categories.length || !formData.description || !formData.availability}
+                                        className={`w-2/3 inline-flex justify-center items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white ${isSubmitting || !formData.name || !formData.price || !formData.categories.length || !formData.description || !formData.availability ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'} transition`}
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Updating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Update Product
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-
-                        <p className="text-gray-600 text-sm mt-3 line-clamp-2">{formData.description || "No description provided"}</p>
-                    </div>
-
-                    {/* Submit Button */}
-                    <div className="pt-4">
-                        <button
-                            type="submit"
-                            disabled={isSubmitting || !formData.photo || !formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability}
-                            className={`w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white ${isSubmitting || !formData.photo || !formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'} transition`}
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Processing...
-                                </>
-                            ) : (
-                                <>
-                                    Upload Product
-                                </>
-                            )}
-                        </button>
                     </div>
                 </form>
             </div>
@@ -651,4 +654,4 @@ const AddProduct = () => {
     );
 };
 
-export default AddProduct;
+export default EditProduct; 

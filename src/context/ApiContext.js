@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { fetchProducts, createProduct, deleteProduct } from '../utils/api';
+import { fetchProducts, createProduct, deleteProduct, updateProduct as updateProductApi } from '../utils/api';
 import { toast } from 'react-toastify';
 import { filterByCategory } from '../utils/categoryUtils';
 
@@ -76,6 +76,29 @@ export const ApiProvider = ({ children }) => {
     }
   };
 
+  // Function to update a product
+  const updateProduct = async (productId, productData) => {
+    try {
+      setLoading(true);
+      const updatedProduct = await updateProductApi(productId, productData);
+      
+      // Update local state with the updated product
+      setProducts(prevProducts => 
+        prevProducts.map(product => 
+          product.id === productId ? updatedProduct : product
+        )
+      );
+      setLastUpdated(new Date());
+      
+      return updatedProduct;
+    } catch (err) {
+      console.error('Error updating product:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Function to refresh data
   const refreshData = () => {
     return loadProducts();
@@ -111,7 +134,24 @@ export const ApiProvider = ({ children }) => {
     }
     
     // Apply category filter
-    return filterByCategory(filtered, category);
+    if (category && category !== "All") {
+      filtered = filtered.filter(product => {
+        // Check if the product has categories array (new format)
+        if (product.categories && Array.isArray(product.categories)) {
+          return product.categories.includes(category);
+        } 
+        // Check if category is stored as comma-separated string
+        else if (product.category && product.category.includes(',')) {
+          return product.category.split(',').map(cat => cat.trim()).includes(category);
+        }
+        // Direct category match (old format)
+        else {
+          return product.category === category;
+        }
+      });
+    }
+    
+    return filtered;
   };
 
   // Get product by ID
@@ -125,7 +165,20 @@ export const ApiProvider = ({ children }) => {
     
     // Filter by category if provided
     if (category && category !== "All") {
-      relatedProducts = relatedProducts.filter(product => product.category === category);
+      relatedProducts = relatedProducts.filter(product => {
+        // Check if the product has categories array (new format)
+        if (product.categories && Array.isArray(product.categories)) {
+          return product.categories.includes(category);
+        } 
+        // Check if category is stored as comma-separated string
+        else if (product.category && product.category.includes(',')) {
+          return product.category.split(',').map(cat => cat.trim()).includes(category);
+        }
+        // Direct category match (old format)
+        else {
+          return product.category === category;
+        }
+      });
     }
     
     return relatedProducts.slice(0, limit);
@@ -140,6 +193,7 @@ export const ApiProvider = ({ children }) => {
     refreshData,
     addNewProduct,
     removeProductFromApi,
+    updateProduct,
     searchProducts,
     filterProductsByCategory,
     searchAndFilterProducts,

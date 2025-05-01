@@ -25,6 +25,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import ViewAllOrder from "./pages/View-All-Order";
 import AddProduct from "./pages/AddProduct";
+import EditProduct from "./pages/EditProduct";
 import DynemicProductDetail from "./pages/product/DynemicProductDetail";
 import ProductDetail from "./pages/product/ProductDetail";
 import Home from "./pages/Home";
@@ -66,6 +67,7 @@ export default function App() {
         {/* Private Routes */}
         <Route element={<PrivateRoute />}>
           <Route path="/AddProduct" element={<AddProduct />} />
+          <Route path="/edit-product/:productId" element={<EditProduct />} />
           <Route path="/WishList" element={<WishList onCartOpen={handleOpenCart} />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/view-all-order" element={<ViewAllOrder />} />
