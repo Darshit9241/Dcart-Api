@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaHeart, FaRegHeart, FaStar, FaStarHalfAlt, FaRegStar, FaShoppingCart } from "react-icons/fa";
 import { FaCodeCompare, FaShare } from "react-icons/fa6";
 import { AiOutlineTwitter, AiFillFacebook, AiFillInstagram } from "react-icons/ai";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { addItem } from "../../redux/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { addToWishlist, removeFromWishlist } from '../../redux/wishlistSlice';
@@ -22,8 +22,8 @@ const Tabs = ({ tabs, activeTab, setActiveTab }) => {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`inline-block py-4 px-6 text-sm font-medium ${activeTab === tab.id
-                ? "text-[#FF7004] border-b-2 border-[#FF7004]"
-                : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              ? "text-[#FF7004] border-b-2 border-[#FF7004]"
+              : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
           >
             {tab.label}
@@ -146,7 +146,7 @@ export default function ProductDetail({ onCartOpen, onCartClick }) {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const currentCurrency = useSelector((state) => state.currency.currentCurrency);
-
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const wishlist = useSelector((state) => state.wishlist);
   const compareList = useSelector((state) => state.compare);
@@ -155,11 +155,11 @@ export default function ProductDetail({ onCartOpen, onCartClick }) {
     const loadProductDetails = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch product details
         const productData = await fetchProductById(productId);
         setProduct(productData);
-        
+
         // Fetch related products
         const relatedProductsData = await fetchRelatedProducts(productId, 4);
         setRelatedProducts(relatedProductsData);
@@ -201,6 +201,11 @@ export default function ProductDetail({ onCartOpen, onCartClick }) {
   ];
 
   const handleAddToCart = (product) => {
+    const userEmail = localStorage.getItem("userEmail");
+    if (!userEmail) {
+      navigate("/login")
+      return;
+    }
     if (!selectedSize && product.hasSizes) {
       toast.warning("Please select a size");
       return;
@@ -224,6 +229,11 @@ export default function ProductDetail({ onCartOpen, onCartClick }) {
   };
 
   const handleBuyNow = (product) => {
+    const userEmail = localStorage.getItem("userEmail");
+    if (!userEmail) {
+      navigate("/login")
+      return;
+    }
     handleAddToCart(product);
     // Navigate to checkout (this would need to be implemented)
     // history.push('/checkout');
@@ -393,7 +403,22 @@ export default function ProductDetail({ onCartOpen, onCartClick }) {
             </div>
 
             <div className="flex items-center justify-between">
-              <p className="font-bold text-xl sm:text-2xl">{product.name}</p>
+              <div>
+                <h4 className="font-medium text-gray-800">{product.name || "Product Name"}</h4>
+                {/* Display availability status */}
+                {product.availability && (
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2 ${
+                    product.availability === 'In Stock' ? 'bg-green-100 text-green-800' : 
+                    product.availability === 'Out of Stock' ? 'bg-red-100 text-red-800' :
+                    product.availability === 'Limited Stock' ? 'bg-orange-100 text-orange-800' :
+                    product.availability === 'Pre-order' ? 'bg-blue-100 text-blue-800' :
+                    product.availability === 'Back-order' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {product.availability}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <StarRating rating={product.rating || 4.5} />
                 <span className="text-sm text-gray-500">({product.reviewCount || 24} reviews)</span>
@@ -401,12 +426,12 @@ export default function ProductDetail({ onCartOpen, onCartClick }) {
             </div>
 
             <div className="flex gap-5 font-semibold pt-4 text-[20px]">
-              {product.oldPrice && (
-                <h2>Old Price: <span className="line-through text-gray-500">{getCurrencySymbol(currentCurrency)}{product.oldPrice}</span></h2>
+              {typeof product.oldPrice === "number" && product.oldPrice > 0 && (
+                <h2>Old Price: <span className="line-through text-gray-500">{getCurrencySymbol(currentCurrency)}{product.oldPrice.toFixed(2)}</span></h2>
               )}
-              <h2>Price: <span className="text-green-600 font-bold">{getCurrencySymbol(currentCurrency)}{product.price}</span></h2>
+              <h2>New Price: <span className="text-green-600 font-bold">{getCurrencySymbol(currentCurrency)}{product.price}</span></h2>
             </div>
-
+              
             <div className="flex flex-wrap gap-2 items-center mt-2">
               <h1 className="font-bold text-sm md:text-base">
                 SKU: <span className="font-normal">{product.id}</span>
@@ -504,8 +529,8 @@ export default function ProductDetail({ onCartOpen, onCartClick }) {
 
               <div
                 className={`cursor-pointer transition-all duration-300 flex items-center gap-1 ${compareList.some((item) => item.id === product.id)
-                    ? "text-blue-500"
-                    : "text-gray-500 hover:text-blue-500"
+                  ? "text-blue-500"
+                  : "text-gray-500 hover:text-blue-500"
                   }`}
                 onClick={() => toggleCompare(product)}
               >

@@ -332,6 +332,21 @@ export default function DynamicProductDetail({ onCartClick, onCartOpen }) {
                                             <FaCircleCheck className="text-emerald-500 mr-1" />
                                             {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
                                         </span>
+                                        
+                                        {/* Add availability status */}
+                                        {product.availability && (
+                                            <span className={`flex items-center mr-4 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                product.availability === 'In Stock' ? 'bg-green-100 text-green-800' : 
+                                                product.availability === 'Out of Stock' ? 'bg-red-100 text-red-800' :
+                                                product.availability === 'Limited Stock' ? 'bg-orange-100 text-orange-800' :
+                                                product.availability === 'Pre-order' ? 'bg-blue-100 text-blue-800' :
+                                                product.availability === 'Back-order' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }`}>
+                                                {product.availability}
+                                            </span>
+                                        )}
+                                        
                                         <span>SKU: {product.id}</span>
                                     </div>
                                 </div>

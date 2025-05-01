@@ -5,6 +5,7 @@ import { addProduct } from '../redux/productSlice';
 import { useNavigate } from 'react-router-dom';
 import { createProduct } from '../utils/api';
 import { useApi } from '../context/ApiContext';
+import { getProductCategories } from '../utils/categoryUtils';
 
 const AddProduct = () => {
     const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const AddProduct = () => {
         category: '',
         photo: null,
         currency: 'USD',
+        availability: '',
     });
     const dispatch = useDispatch();
     const { addNewProduct, refreshData } = useApi();
@@ -26,25 +28,27 @@ const AddProduct = () => {
     // State for dropdowns
     const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
     const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
+    const [availabilityDropdownOpen, setAvailabilityDropdownOpen] = useState(false);
     const categoryDropdownRef = useRef(null);
     const currencyDropdownRef = useRef(null);
+    const availabilityDropdownRef = useRef(null);
     const currentCurrency = useSelector((state) => state.currency.currentCurrency);
 
     // Loading state
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [uploadError, setUploadError] = useState(null);
 
-    const categories = [
-        "Electronics",
-        "Clothing",
-        "Home & Kitchen",
-        "Beauty & Personal Care",
-        "Toys & Games",
-        "Books",
-        "Sports & Outdoors",
-        "Automotive",
-        "Health & Wellness",
-        "Grocery",
-        "Other"
+    // Get product categories from utility (excludes "All" category)
+    const categories = getProductCategories();
+
+    // Availability options
+    const availabilityOptions = [
+        "In Stock",
+        "Out of Stock",
+        "Pre-order",
+        "Back-order",
+        "Limited Stock",
+        "Discontinued"
     ];
 
     // Currency options with symbols
@@ -71,6 +75,9 @@ const AddProduct = () => {
             }
             if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
                 setCurrencyDropdownOpen(false);
+            }
+            if (availabilityDropdownRef.current && !availabilityDropdownRef.current.contains(event.target)) {
+                setAvailabilityDropdownOpen(false);
             }
         };
 
@@ -166,6 +173,7 @@ const AddProduct = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setUploadError(null);
 
         try {
             const base64Image = await fileToBase64(formData.photo);
@@ -177,6 +185,7 @@ const AddProduct = () => {
                 description: formData.description,
                 category: formData.category,
                 currency: formData.currency,
+                availability: formData.availability,
                 imgSrc: base64Image,
                 alt: formData.name,
             };
@@ -199,12 +208,15 @@ const AddProduct = () => {
                 description: '',
                 category: '',
                 currency: 'USD',
+                availability: '',
                 photo: null,
             });
             setPreview("");
             navigate('/product');
         } catch (error) {
-            toast.error("Failed to upload product. Please try again.");
+            const errorMessage = error.message || "Failed to upload product";
+            toast.error(errorMessage);
+            setUploadError(errorMessage);
             console.error(error);
         } finally {
             setIsSubmitting(false);
@@ -216,6 +228,11 @@ const AddProduct = () => {
         setCategoryDropdownOpen(false);
     };
 
+    const handleAvailabilitySelect = (availability) => {
+        setFormData({ ...formData, availability });
+        setAvailabilityDropdownOpen(false);
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white py-12 px-4 sm:px-6">
             <div className="max-w-3xl mx-auto">
@@ -223,6 +240,38 @@ const AddProduct = () => {
                     <h2 className="text-3xl font-bold text-gray-900">Add New Product</h2>
                     <p className="mt-2 text-gray-600">Complete the form below to add a new product to your inventory</p>
                 </div>
+
+                {uploadError && (
+                    <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 md:hidden">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">Upload failed</h3>
+                                <div className="mt-1 text-sm text-red-700">
+                                    <p>{uploadError}</p>
+                                </div>
+                                <div className="mt-2">
+                                    <ul className="list-disc pl-5 space-y-1 text-xs text-red-700">
+                                        <li>Check your internet connection</li>
+                                        <li>Verify image size (max 5MB recommended)</li>
+                                        <li>Try uploading in a different file format</li>
+                                        <li>Ensure all required fields are completed</li>
+                                    </ul>
+                                </div>
+                                <button 
+                                    onClick={() => setUploadError(null)}
+                                    className="mt-3 text-sm font-medium text-red-600 hover:text-red-500"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-lg">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -283,6 +332,49 @@ const AddProduct = () => {
                                     type="hidden"
                                     name="category"
                                     value={formData.category}
+                                    required
+                                />
+                            </div>
+
+                            {/* Add Availability Dropdown */}
+                            <div className="relative" ref={availabilityDropdownRef}>
+                                <label className="block mb-1 text-gray-700 font-medium">Availability <span className="text-red-500">*</span></label>
+                                <div
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 flex justify-between items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 hover:bg-gray-50 transition"
+                                    onClick={() => setAvailabilityDropdownOpen(!availabilityDropdownOpen)}
+                                >
+                                    <span className={formData.availability ? "text-gray-800" : "text-gray-400"}>
+                                        {formData.availability || "Select availability"}
+                                    </span>
+                                    <svg
+                                        className={`w-5 h-5 transition-transform duration-300 ${availabilityDropdownOpen ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+
+                                {availabilityDropdownOpen && (
+                                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                        {availabilityOptions.map((option, index) => (
+                                            <div
+                                                key={index}
+                                                className="px-4 py-2 hover:bg-indigo-50 cursor-pointer transition-colors"
+                                                onClick={() => handleAvailabilitySelect(option)}
+                                            >
+                                                {option}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <input
+                                    type="hidden"
+                                    name="availability"
+                                    value={formData.availability}
                                     required
                                 />
                             </div>
@@ -448,6 +540,18 @@ const AddProduct = () => {
                                             <div>
                                                 <h4 className="font-medium text-gray-800">{formData.name || "Product Name"}</h4>
                                                 <p className="text-gray-500 text-sm">{formData.category || "Category"}</p>
+                                                
+                                                {/* Display availability status in preview */}
+                                                {formData.availability && (
+                                                    <p className={`text-sm mt-1 ${
+                                                        formData.availability === 'In Stock' ? 'text-green-600' : 
+                                                        formData.availability === 'Out of Stock' ? 'text-red-600' : 
+                                                        formData.availability === 'Limited Stock' ? 'text-orange-600' : 
+                                                        'text-yellow-600'
+                                                    }`}>
+                                                        {formData.availability}
+                                                    </p>
+                                                )}
 
                                                 <div className="flex items-center space-x-2 mt-2">
                                                     <span className="font-bold text-gray-900">{getCurrencySymbol(currentCurrency)}{parseFloat(formData.price || 0).toFixed(2)}</span>
@@ -472,8 +576,8 @@ const AddProduct = () => {
                             <div className="pt-4">
                                 <button
                                     type="submit"
-                                    disabled={isSubmitting || !formData.photo || !formData.name || !formData.price || !formData.category || !formData.description}
-                                    className={`w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white ${isSubmitting || !formData.photo || !formData.name || !formData.price || !formData.category || !formData.description ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'} transition`}
+                                    disabled={isSubmitting || !formData.photo || !formData.name || !formData.price || !formData.category || !formData.description || !formData.availability}
+                                    className={`w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white ${isSubmitting || !formData.photo || !formData.name || !formData.price || !formData.category || !formData.description || !formData.availability ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'} transition`}
                                 >
                                     {isSubmitting ? (
                                         <>

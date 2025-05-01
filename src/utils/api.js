@@ -17,6 +17,8 @@ export const formatProduct = (product) => {
     oldPrice: Number(product.oldprice),
     alt: product.name,
     discount: product.discount,
+    availability:product.availability,
+    category:product.category,
     rating: 4.5, // Default rating since API doesn't provide one
     reviewCount: 24 // Default review count
   };
@@ -35,6 +37,8 @@ export const formatProductForApi = (product) => {
     newprice: product.price,
     oldprice: product.oldPrice,
     discount: product.discount,
+    availability: product.availability,
+    category:product.category,
     // Add any other fields the API expects
   };
 };

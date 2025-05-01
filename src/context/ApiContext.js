@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { fetchProducts, createProduct, deleteProduct } from '../utils/api';
 import { toast } from 'react-toastify';
+import { filterByCategory } from '../utils/categoryUtils';
 
 // Create context
 const ApiContext = createContext();
@@ -91,16 +92,43 @@ export const ApiProvider = ({ children }) => {
     );
   };
 
+  // Filter products by category
+  const filterProductsByCategory = (category) => {
+    return filterByCategory(products, category);
+  };
+
+  // Combined search and filter
+  const searchAndFilterProducts = (term, category) => {
+    let filtered = products;
+    
+    // Apply search filter if term exists
+    if (term) {
+      const lowerTerm = term.toLowerCase();
+      filtered = filtered.filter(product => 
+        product.name.toLowerCase().includes(lowerTerm) ||
+        (product.description && product.description.toLowerCase().includes(lowerTerm))
+      );
+    }
+    
+    // Apply category filter
+    return filterByCategory(filtered, category);
+  };
+
   // Get product by ID
   const getProductById = (id) => {
     return products.find(product => String(product.id) === String(id));
   };
 
-  // Get related products
-  const getRelatedProducts = (productId, limit = 4) => {
-    return products
-      .filter(product => String(product.id) !== String(productId))
-      .slice(0, limit);
+  // Get related products (optionally by category)
+  const getRelatedProducts = (productId, category = null, limit = 4) => {
+    let relatedProducts = products.filter(product => String(product.id) !== String(productId));
+    
+    // Filter by category if provided
+    if (category && category !== "All") {
+      relatedProducts = relatedProducts.filter(product => product.category === category);
+    }
+    
+    return relatedProducts.slice(0, limit);
   };
 
   // Context value
@@ -113,6 +141,8 @@ export const ApiProvider = ({ children }) => {
     addNewProduct,
     removeProductFromApi,
     searchProducts,
+    filterProductsByCategory,
+    searchAndFilterProducts,
     getProductById,
     getRelatedProducts
   };
