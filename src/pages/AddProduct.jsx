@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { addProduct } from '../redux/productSlice';
 import { useNavigate } from 'react-router-dom';
-import { createProduct } from '../utils/api';
 import { useApi } from '../context/ApiContext';
 import { getProductCategories } from '../utils/categoryUtils';
 import { currencies } from '../utils/currencyUtils';
