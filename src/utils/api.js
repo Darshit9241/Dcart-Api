@@ -26,9 +26,7 @@ export const formatProduct = (product) => {
  * Format product data for API submission
  * @param {Object} product - Product with application format
  * @returns {Object} - Formatted product for API
- */git remote add origin git@github.com:Darshit9241/Dcart-Api.git
-git branch -M main
-git push -u origin main
+ */
 export const formatProductForApi = (product) => {
   return {
     name: product.name,
