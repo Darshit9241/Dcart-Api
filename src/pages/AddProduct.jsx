@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { createProduct } from '../utils/api';
 import { useApi } from '../context/ApiContext';
 import { getProductCategories } from '../utils/categoryUtils';
+import { currencies } from '../utils/currencyUtils';
 
 const AddProduct = () => {
     const [formData, setFormData] = useState({
@@ -50,20 +51,6 @@ const AddProduct = () => {
         "Back-order",
         "Limited Stock",
         "Discontinued"
-    ];
-
-    // Currency options with symbols
-    const currencies = [
-        { code: 'USD', symbol: '$', name: 'US Dollar' },
-        { code: 'EUR', symbol: '€', name: 'Euro' },
-        { code: 'GBP', symbol: '£', name: 'British Pound' },
-        { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-        { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-        { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-        { code: 'RUB', symbol: '₽', name: 'Russian Ruble' },
-        { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-        { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-        { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
     ];
 
     useEffect(() => {
@@ -201,7 +188,7 @@ const AddProduct = () => {
             // Send to API via context
             await addNewProduct(newProduct);
             toast.success("Product uploaded successfully and added to API!");
-            
+
             setFormData({
                 name: '',
                 price: '',
@@ -292,7 +279,7 @@ const AddProduct = () => {
                                         <li>Ensure all required fields are completed</li>
                                     </ul>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setUploadError(null)}
                                     className="mt-3 text-sm font-medium text-red-600 hover:text-red-500"
                                 >
@@ -331,7 +318,7 @@ const AddProduct = () => {
                                     onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
                                 >
                                     <span className={formData.categories.length > 0 ? "text-gray-800" : "text-gray-400"}>
-                                        {formData.categories.length > 0 
+                                        {formData.categories.length > 0
                                             ? formData.categories.join(', ')
                                             : "Select categories"}
                                     </span>
@@ -351,9 +338,8 @@ const AddProduct = () => {
                                         {categories.map((category, index) => (
                                             <div
                                                 key={index}
-                                                className={`px-4 py-2 hover:bg-indigo-50 cursor-pointer transition-colors flex items-center justify-between ${
-                                                    formData.categories.includes(category) ? 'bg-indigo-50' : ''
-                                                }`}
+                                                className={`px-4 py-2 hover:bg-indigo-50 cursor-pointer transition-colors flex items-center justify-between ${formData.categories.includes(category) ? 'bg-indigo-50' : ''
+                                                    }`}
                                                 onClick={() => handleCategorySelect(category)}
                                             >
                                                 <span>{category}</span>
@@ -589,15 +575,14 @@ const AddProduct = () => {
                                                         <p className="text-gray-500 text-sm">No categories selected</p>
                                                     )}
                                                 </div>
-                                                
+
                                                 {/* Display availability status in preview */}
                                                 {formData.availability && (
-                                                    <p className={`text-sm mt-1 ${
-                                                        formData.availability === 'In Stock' ? 'text-green-600' : 
-                                                        formData.availability === 'Out of Stock' ? 'text-red-600' : 
-                                                        formData.availability === 'Limited Stock' ? 'text-orange-600' : 
-                                                        'text-yellow-600'
-                                                    }`}>
+                                                    <p className={`text-sm mt-1 ${formData.availability === 'In Stock' ? 'text-green-600' :
+                                                        formData.availability === 'Out of Stock' ? 'text-red-600' :
+                                                            formData.availability === 'Limited Stock' ? 'text-orange-600' :
+                                                                'text-yellow-600'
+                                                        }`}>
                                                         {formData.availability}
                                                     </p>
                                                 )}
