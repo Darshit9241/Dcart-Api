@@ -32,12 +32,12 @@ export default function Product({ onCartClick, onCartOpen }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   // Get product data and loading state from API context
-  const { 
-    products, 
-    loading, 
+  const {
+    products,
+    loading,
     searchAndFilterProducts,
-    refreshData, 
-    removeProductFromApi 
+    refreshData,
+    removeProductFromApi
   } = useApi();
 
   // Initialize productStates based on products from API context
@@ -91,13 +91,13 @@ export default function Product({ onCartClick, onCartOpen }) {
   const handleRemoveProduct = async (productId) => {
     try {
       setIsDeleting(true); // Set deleting state to true during deletion
-      
+
       // First delete from API
       await removeProductFromApi(productId);
-      
+
       // Then update Redux state
       dispatch(removeProduct(productId));
-      
+
       // Update cartItems if the product was in cart
       if (cartItems.includes(productId)) {
         const itemIndex = cart.findIndex(item => item.id === productId);
@@ -106,15 +106,15 @@ export default function Product({ onCartClick, onCartOpen }) {
           setCartItems(cartItems.filter(id => id !== productId));
         }
       }
-      
+
       // Update local product states
       setProductStates(prev => prev.filter(product => product.id !== productId));
-      
+
       toast.success("Product removed successfully!");
     } catch (error) {
       console.error("Error removing product:", error);
       toast.error("Failed to remove product. Please try again.");
-      
+
       // Refresh product data to ensure UI is in sync with backend
       try {
         await refreshData();
@@ -214,37 +214,36 @@ export default function Product({ onCartClick, onCartOpen }) {
             <div className="relative">
               {/* Left shadow fade for scroll indication */}
               <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none"></div>
-              
+
               <div className="flex overflow-x-auto py-2 px-4 scrollbar-hide hide-scrollbar">
                 {categories.map((category) => {
                   const isSelected = selectedCategory === category;
-                  
+
                   return (
                     <button
                       key={category}
                       onClick={() => handleCategoryChange(category)}
-                      className={`whitespace-nowrap px-5 py-2 mx-1 text-sm transition-all duration-300 border-b-2 ${
-                        isSelected 
-                        ? 'border-black text-black font-medium' 
+                      className={`whitespace-nowrap px-5 py-2 mx-1 text-sm transition-all duration-300 border-b-2 ${isSelected
+                        ? 'border-black text-black font-medium'
                         : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-200'
-                      }`}
+                        }`}
                     >
                       {category}
                     </button>
                   );
                 })}
               </div>
-              
+
               {/* Right shadow fade for scroll indication */}
               <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none"></div>
             </div>
-            
+
             {/* Optional: Simple Filter Indicator */}
             {selectedCategory !== "All" && (
               <div className="mt-2 px-4">
                 <div className="inline-flex items-center gap-2 text-sm text-gray-600">
                   <span>Filtered by {selectedCategory}</span>
-                  <button 
+                  <button
                     onClick={() => handleCategoryChange("All")}
                     className="text-black hover:text-gray-700 underline text-xs"
                   >
@@ -269,8 +268,8 @@ export default function Product({ onCartClick, onCartOpen }) {
                 </svg>
                 <h3 className="text-xl font-medium text-gray-700 mb-2">No products found</h3>
                 <p className="text-gray-500 text-center max-w-md">
-                  {searchTerm 
-                    ? `No products matching "${searchTerm}" in ${selectedCategory !== 'All' ? selectedCategory : 'any'} category.` 
+                  {searchTerm
+                    ? `No products matching "${searchTerm}" in ${selectedCategory !== 'All' ? selectedCategory : 'any'} category.`
                     : `No products available in ${selectedCategory} category.`}
                 </p>
               </div>
@@ -492,16 +491,16 @@ export default function Product({ onCartClick, onCartOpen }) {
                     <p className="text-gray-700 font-medium mb-2">Availability:</p>
                     <div className={`inline-flex items-center rounded-full text-sm`}>
                       {selectedProduct.availability && (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2 ${selectedProduct.availability === 'In Stock' ? 'bg-green-100 text-green-800' :
-                            selectedProduct.availability === 'Out of Stock' ? 'bg-red-100 text-red-800' :
-                              selectedProduct.availability === 'Limited Stock' ? 'bg-orange-100 text-orange-800' :
-                                selectedProduct.availability === 'Pre-order' ? 'bg-blue-100 text-blue-800' :
-                                  selectedProduct.availability === 'Back-order' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-gray-100 text-gray-800'
-                            }`}>
-                            {selectedProduct.availability}
-                          </span>
-                        )}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2 ${selectedProduct.availability === 'In Stock' ? 'bg-green-100 text-green-800' :
+                          selectedProduct.availability === 'Out of Stock' ? 'bg-red-100 text-red-800' :
+                            selectedProduct.availability === 'Limited Stock' ? 'bg-orange-100 text-orange-800' :
+                              selectedProduct.availability === 'Pre-order' ? 'bg-blue-100 text-blue-800' :
+                                selectedProduct.availability === 'Back-order' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
+                          }`}>
+                          {selectedProduct.availability}
+                        </span>
+                      )}
                     </div>
                   </div>
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaArrowRight, FaChevronLeft, FaChevronRight, FaShoppingCart, FaFire } from 'react-icons/fa';
+import { FaTimes, FaArrowRight, FaChevronLeft, FaChevronRight, FaShoppingCart, FaFire, FaGift } from 'react-icons/fa';
 import products from '../ProductData';
 
 const OfferModal = ({ showModal, onClose }) => {
@@ -18,7 +18,7 @@ const OfferModal = ({ showModal, onClose }) => {
       const discountB = parseInt(b.discount.replace(/[^0-9]/g, ''));
       return discountB - discountA; // Sort by highest discount first
     })
-    .slice(0, 6); // Get top 6 deals (increased from 4)
+    .slice(0, 6); // Get top 6 deals
 
   // Handle slider navigation
   const nextSlide = () => {
@@ -36,6 +36,15 @@ const OfferModal = ({ showModal, onClose }) => {
       setCurrentSlide(bestDeals.length - 1);
     }
   };
+
+  // Auto-advance slides
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [currentSlide]);
 
   useEffect(() => {
     if (showModal) {
@@ -62,42 +71,54 @@ const OfferModal = ({ showModal, onClose }) => {
     }
   }, [currentSlide]);
 
+  const handleAddToCart = (e, product) => {
+    e.stopPropagation();
+    // Add to cart functionality here
+    console.log('Added to cart:', product.name);
+  };
+
   if (!showModal) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-center items-center transition-all duration-300 px-3 sm:px-4">
-      {/* Backdrop */}
+      {/* Backdrop with blur */}
       <div 
-        className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-md"
+        className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Modal Container */}
       <div 
-        className={`bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl relative overflow-hidden transform transition-all duration-500 max-h-[90vh] ${animation ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+        className={`bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl relative overflow-hidden transform transition-all duration-500 max-h-[90vh] ${animation ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="overflow-auto max-h-[90vh] scrollbar-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-          {/* Background pattern - subtle geometric pattern */}
+          {/* Background pattern with animated gradient */}
           <div className="absolute inset-0 opacity-5">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#FF7004] to-[#FF9F4A]" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FF7004] to-[#FF9F4A] animate-gradient-x" />
             <div className="h-full w-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+CjxwYXRoIGQ9Ik0wIDMwIEwzMCAwIEw2MCAzMCBMMzAgNjAgWiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIxIj48L3BhdGg+Cjwvc3ZnPg==')] opacity-20" />
           </div>
 
-          {/* Header */}
+          {/* Header with vibrant gradient and pulsing animation */}
           <div className="bg-gradient-to-r from-[#FF7004] to-[#FF9F4A] p-6 sm:p-8 text-center relative overflow-hidden">
-            <div className="absolute -right-16 -top-16 w-64 h-64 bg-white opacity-10 rounded-full"></div>
-            <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-white opacity-10 rounded-full"></div>
+            <div className="absolute -right-16 -top-16 w-64 h-64 bg-white opacity-10 rounded-full animate-pulse-slow"></div>
+            <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-white opacity-10 rounded-full animate-pulse-slow animation-delay-1000"></div>
             
             <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between">
-              <div className="text-left mb-4 sm:mb-0">
+              <div className="text-left mb-4 sm:mb-0 relative">
+                <div className="absolute -left-8 -top-8 w-16 h-16 bg-yellow-300 opacity-20 rounded-full animate-ping-slow"></div>
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">Flash Sale!</h2>
-                <p className="text-white text-opacity-90 text-base sm:text-lg font-light max-w-md">Discover exclusive deals on our premium products with discounts up to 40% off</p>
+                <p className="text-white text-opacity-90 text-base sm:text-lg font-light max-w-md">
+                  Discover exclusive deals on our premium products with discounts up to 40% off
+                </p>
               </div>
               
-              <div className="bg-white dark:bg-gray-800 bg-opacity-20 dark:bg-opacity-30 backdrop-blur-sm px-5 py-3 rounded-xl">
+              {/* Countdown timer with improved visuals */}
+              <div className="bg-white dark:bg-gray-800 bg-opacity-20 dark:bg-opacity-30 backdrop-blur-sm px-5 py-3 rounded-xl shadow-lg">
                 <div className="text-white text-center">
-                  <p className="uppercase text-xs font-semibold tracking-wider mb-1">Limited time offer</p>
+                  <p className="uppercase text-xs font-semibold tracking-wider mb-1 flex items-center justify-center">
+                    <FaGift className="mr-1 text-yellow-300" /> Limited time offer
+                  </p>
                   <div className="flex gap-2 sm:gap-3">
                     {[
                       { value: 2, label: 'Days' },
@@ -106,7 +127,7 @@ const OfferModal = ({ showModal, onClose }) => {
                       { value: 30, label: 'Secs' }
                     ].map((item, index) => (
                       <div key={index} className="flex flex-col items-center">
-                        <div className="bg-white dark:bg-gray-700 text-[#FF7004] dark:text-white font-bold text-xl sm:text-2xl w-10 sm:w-12 h-10 sm:h-12 rounded-lg flex items-center justify-center">
+                        <div className="bg-white dark:bg-gray-700 text-[#FF7004] dark:text-white font-bold text-xl sm:text-2xl w-10 sm:w-12 h-10 sm:h-12 rounded-lg flex items-center justify-center shadow-inner">
                           {item.value}
                         </div>
                         <span className="text-white text-xs mt-1">{item.label}</span>
@@ -118,24 +139,24 @@ const OfferModal = ({ showModal, onClose }) => {
             </div>
           </div>
 
-          {/* Close button */}
+          {/* Close button with improved hover effect */}
           <button
-            className="absolute top-3 sm:top-4 right-3 sm:right-4 text-white bg-black bg-opacity-20 hover:bg-opacity-40 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 hover:rotate-90 z-10"
+            className="absolute top-3 sm:top-4 right-3 sm:right-4 text-white bg-black bg-opacity-20 hover:bg-opacity-40 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 hover:rotate-90 hover:scale-110 z-10"
             onClick={onClose}
             aria-label="Close Modal"
           >
             <FaTimes className="h-4 w-4" />
           </button>
 
-          {/* Best Deals */}
+          {/* Best Deals Section */}
           <div className="p-5 sm:p-8">
             <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center">
               <span className="inline-block w-1.5 h-6 sm:h-8 bg-gradient-to-b from-[#FF7004] to-purple-600 mr-3 rounded-full"></span>
-              <FaFire className="text-orange-500 mr-2" />
+              <FaFire className="text-orange-500 mr-2 animate-pulse" />
               <span className="leading-tight">Hot Deals You Don't Want to Miss!</span>
             </h3>
             
-            {/* Mobile Carousel (visible only on small screens) */}
+            {/* Mobile Carousel with improved navigation and card design */}
             <div className="block sm:hidden relative">
               <div 
                 ref={sliderRef}
@@ -174,7 +195,10 @@ const OfferModal = ({ showModal, onClose }) => {
                                 <span className="text-gray-400 line-through text-xs mr-2">${product.oldPrice.toFixed(2)}</span>
                                 <span className="text-[#FF7004] dark:text-blue-400 font-bold">${product.price.toFixed(2)}</span>
                               </div>
-                              <button className="bg-[#FF7004] text-white rounded-full p-2 transition-all">
+                              <button 
+                                className="bg-[#FF7004] text-white rounded-full p-2 transition-all hover:bg-orange-600 transform hover:scale-110"
+                                onClick={(e) => handleAddToCart(e, product)}
+                              >
                                 <FaShoppingCart className="h-4 w-4" />
                               </button>
                             </div>
@@ -185,6 +209,8 @@ const OfferModal = ({ showModal, onClose }) => {
                   </div>
                 ))}
               </div>
+              
+              {/* Improved indicators */}
               <div className="flex justify-center mt-4 gap-2">
                 {bestDeals.map((_, index) => (
                   <button
@@ -196,26 +222,28 @@ const OfferModal = ({ showModal, onClose }) => {
                   />
                 ))}
               </div>
+              
+              {/* Navigation buttons with improved hover effects */}
               <button
-                className="absolute left-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full p-2 shadow-md z-10"
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full p-2 shadow-md z-10 hover:bg-[#FF7004] hover:text-white transition-colors"
                 onClick={prevSlide}
               >
                 <FaChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-300" />
               </button>
               <button
-                className="absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full p-2 shadow-md z-10"
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full p-2 shadow-md z-10 hover:bg-[#FF7004] hover:text-white transition-colors"
                 onClick={nextSlide}
               >
                 <FaChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-300" />
               </button>
             </div>
             
-            {/* Desktop Grid (visible only on larger screens) */}
+            {/* Desktop Grid with improved card design and animations */}
             <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 gap-6">
               {bestDeals.map((product) => (
                 <div 
                   key={product.id} 
-                  className="group bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-100 dark:border-gray-700"
+                  className="group bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-100 dark:border-gray-700 transform hover:-translate-y-1"
                   onClick={() => {
                     navigate(`/product/${product.id}`);
                     onClose();
@@ -237,7 +265,10 @@ const OfferModal = ({ showModal, onClose }) => {
                       </div>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                      <button className="bg-[#FF7004] text-white w-full py-2 rounded-lg font-medium flex items-center justify-center">
+                      <button 
+                        className="bg-[#FF7004] text-white w-full py-2 rounded-lg font-medium flex items-center justify-center hover:bg-orange-600 transition-colors"
+                        onClick={(e) => handleAddToCart(e, product)}
+                      >
                         <FaShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
                       </button>
                     </div>
@@ -257,7 +288,7 @@ const OfferModal = ({ showModal, onClose }) => {
             </div>
           </div>
 
-          {/* Footer */}
+          {/* Footer with improved button design */}
           <div className="border-t border-gray-200 dark:border-gray-700 p-5 sm:p-6 bg-gray-50 dark:bg-gray-800 flex flex-col sm:flex-row justify-between gap-3">
             <button
               className="order-2 sm:order-1 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 font-medium py-3 px-6 rounded-lg transition-colors flex-1 sm:flex-initial text-sm"
@@ -266,14 +297,14 @@ const OfferModal = ({ showModal, onClose }) => {
               Maybe Later
             </button>
             <button
-              className="order-1 sm:order-2 bg-gradient-to-r from-[#FF7004] to-[#FF7004] text-white font-medium py-3 px-6 rounded-lg hover:shadow-lg hover:from-[#FF7004] hover:to-[#FF7004] transition-all flex-1 sm:flex-initial text-sm flex items-center justify-center"
+              className="order-1 sm:order-2 bg-gradient-to-r from-[#FF7004] to-[#FF9F4A] text-white font-medium py-3 px-6 rounded-lg hover:shadow-lg transition-all flex-1 sm:flex-initial text-sm flex items-center justify-center transform hover:scale-105"
               onClick={() => {
                 navigate('/product');
                 onClose();
               }}
             >
               <span>View All Products</span>
-              <FaArrowRight className="ml-2 h-3.5 w-3.5" />
+              <FaArrowRight className="ml-2 h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </div>
