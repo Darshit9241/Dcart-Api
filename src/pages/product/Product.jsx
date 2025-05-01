@@ -170,7 +170,15 @@ export default function Product({ onCartClick, onCartOpen }) {
                     <div className="relative">
                       <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-2xl">
                         <img
-                          onClick={() => navigate(`/product/${product.id}`)}
+                          onClick={() => {
+                            const userEmail = localStorage.getItem("userEmail");
+                            if (!userEmail) {
+                              navigate("/login");
+                              return;
+                            }
+                            navigate(`/product/${product.id}`);
+                          }}
+                          
                           src={product.imgSrc}
                           alt={product.alt || product.name}
                           className="w-full h-[300px] object-cover transform group-hover:scale-105 transition-transform duration-300 cursor-pointer"
