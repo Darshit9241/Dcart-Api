@@ -86,30 +86,8 @@ const AddProduct = () => {
         if (name === 'photo') {
             const file = files?.[0];
             if (file) {
-                // Validate file type
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'];
-                if (!allowedTypes.includes(file.type)) {
-                    toast.error("Please select a valid image file (JPEG, PNG, GIF, or SVG)");
-                    return;
-                }
-                
-                // Validate file size (5MB limit)
-                const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-                if (file.size > MAX_FILE_SIZE) {
-                    toast.error("File size exceeds 5MB limit");
-                    return;
-                }
-                
-                // Set file and create preview URL
                 setFormData({ ...formData, photo: file });
-                
-                try {
-                    const previewUrl = URL.createObjectURL(file);
-                    setPreview(previewUrl);
-                } catch (error) {
-                    console.error("Error creating preview URL:", error);
-                    toast.error("Unable to preview image. Please try another file.");
-                }
+                setPreview(URL.createObjectURL(file));
             } else {
                 setFormData({ ...formData, photo: null });
                 setPreview(null);
@@ -172,25 +150,10 @@ const AddProduct = () => {
 
     const fileToBase64 = (file) => {
         return new Promise((resolve, reject) => {
-            if (!file) {
-                reject(new Error('No file selected'));
-                return;
-            }
-            
-            // Check file size (5MB limit)
-            const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-            if (file.size > MAX_FILE_SIZE) {
-                reject(new Error('File size exceeds 5MB limit'));
-                return;
-            }
-            
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = () => resolve(reader.result);
-            reader.onerror = (error) => {
-                console.error('Error reading file:', error);
-                reject(new Error('Failed to read file'));
-            };
+            reader.onerror = reject;
         });
     };
 
@@ -199,33 +162,17 @@ const AddProduct = () => {
         setIsSubmitting(true);
         setUploadError(null);
 
-        if (!formData.photo) {
-            setUploadError("Product image is required");
-            setIsSubmitting(false);
-            toast.error("Product image is required");
-            return;
-        }
-
         try {
-            // Convert photo to base64
-            let base64Image;
-            try {
-                base64Image = await fileToBase64(formData.photo);
-            } catch (fileError) {
-                console.error("Error converting file to base64:", fileError);
-                throw new Error(fileError.message || "Failed to process image file");
-            }
-
-            // Create product object
+            const base64Image = await fileToBase64(formData.photo);
             const newProduct = {
                 name: formData.name,
-                price: parseFloat(formData.price) || 0,
-                oldPrice: parseFloat(formData.oldPrice) || 0,
+                price: parseFloat(formData.price),
+                oldPrice: parseFloat(formData.oldPrice),
                 discount: formData.discount,
                 description: formData.description,
                 category: formData.category,
                 categories: formData.categories,
-                currency: formData.currency || 'USD',
+                currency: formData.currency,
                 availability: formData.availability,
                 imgSrc: base64Image,
                 alt: formData.name,
@@ -238,38 +185,28 @@ const AddProduct = () => {
             }));
 
             // Send to API via context
-            try {
-                await addNewProduct(newProduct);
-                toast.success("Product uploaded successfully and added to API!");
-                
-                // Reset form
-                setFormData({
-                    name: '',
-                    price: '',
-                    oldPrice: '',
-                    discount: '',
-                    description: '',
-                    category: '',
-                    categories: [],
-                    currency: 'USD',
-                    availability: '',
-                    photo: null,
-                });
-                setPreview(null);
-                
-                // Navigate after successful submission
-                navigate('/product');
-            } catch (apiError) {
-                console.error("API Error:", apiError);
-                throw new Error("Failed to save product to database. Please try again.");
-            }
+            await addNewProduct(newProduct);
+            toast.success("Product uploaded successfully and added to API!");
+
+            setFormData({
+                name: '',
+                price: '',
+                oldPrice: '',
+                discount: '',
+                description: '',
+                category: '',
+                categories: [],
+                currency: 'USD',
+                availability: '',
+                photo: null,
+            });
+            setPreview("");
+            navigate('/product');
         } catch (error) {
             const errorMessage = error.message || "Failed to upload product";
             toast.error(errorMessage);
             setUploadError(errorMessage);
             console.error(error);
-            
-            // Keep the form data so user doesn't lose their input
         } finally {
             setIsSubmitting(false);
         }
@@ -321,7 +258,7 @@ const AddProduct = () => {
                 </div>
 
                 {uploadError && (
-                    <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 md:hidden">
                         <div className="flex">
                             <div className="flex-shrink-0">
                                 <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
