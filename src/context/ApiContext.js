@@ -121,7 +121,7 @@ export const ApiProvider = ({ children }) => {
   };
 
   // Combined search and filter
-  const searchAndFilterProducts = (term, category) => {
+  const searchAndFilterProducts = (term, categories) => {
     let filtered = products;
     
     // Apply search filter if term exists
@@ -133,22 +133,28 @@ export const ApiProvider = ({ children }) => {
       );
     }
     
-    // Apply category filter
-    if (category && category !== "All") {
-      filtered = filtered.filter(product => {
-        // Check if the product has categories array (new format)
-        if (product.categories && Array.isArray(product.categories)) {
-          return product.categories.includes(category);
-        } 
-        // Check if category is stored as comma-separated string
-        else if (product.category && product.category.includes(',')) {
-          return product.category.split(',').map(cat => cat.trim()).includes(category);
-        }
-        // Direct category match (old format)
-        else {
-          return product.category === category;
-        }
-      });
+    // Apply category filter if categories are selected
+    if (categories && Array.isArray(categories) && categories.length > 0) {
+      // If "All" is included or categories array is empty, don't filter by category
+      if (!categories.includes("All")) {
+        filtered = filtered.filter(product => {
+          // For each product, check if it matches any of the selected categories
+          return categories.some(selectedCategory => {
+            // Check if the product has categories array (new format)
+            if (product.categories && Array.isArray(product.categories)) {
+              return product.categories.includes(selectedCategory);
+            } 
+            // Check if category is stored as comma-separated string
+            else if (product.category && product.category.includes(',')) {
+              return product.category.split(',').map(cat => cat.trim()).includes(selectedCategory);
+            }
+            // Direct category match (old format)
+            else {
+              return product.category === selectedCategory;
+            }
+          });
+        });
+      }
     }
     
     return filtered;
@@ -160,25 +166,31 @@ export const ApiProvider = ({ children }) => {
   };
 
   // Get related products (optionally by category)
-  const getRelatedProducts = (productId, category = null, limit = 4) => {
+  const getRelatedProducts = (productId, categories = null, limit = 4) => {
     let relatedProducts = products.filter(product => String(product.id) !== String(productId));
     
-    // Filter by category if provided
-    if (category && category !== "All") {
-      relatedProducts = relatedProducts.filter(product => {
-        // Check if the product has categories array (new format)
-        if (product.categories && Array.isArray(product.categories)) {
-          return product.categories.includes(category);
-        } 
-        // Check if category is stored as comma-separated string
-        else if (product.category && product.category.includes(',')) {
-          return product.category.split(',').map(cat => cat.trim()).includes(category);
-        }
-        // Direct category match (old format)
-        else {
-          return product.category === category;
-        }
-      });
+    // Filter by categories if provided
+    if (categories && Array.isArray(categories) && categories.length > 0) {
+      // If "All" is included, don't filter by category
+      if (!categories.includes("All")) {
+        relatedProducts = relatedProducts.filter(product => {
+          // For each product, check if it matches any of the selected categories
+          return categories.some(selectedCategory => {
+            // Check if the product has categories array (new format)
+            if (product.categories && Array.isArray(product.categories)) {
+              return product.categories.includes(selectedCategory);
+            } 
+            // Check if category is stored as comma-separated string
+            else if (product.category && product.category.includes(',')) {
+              return product.category.split(',').map(cat => cat.trim()).includes(selectedCategory);
+            }
+            // Direct category match (old format)
+            else {
+              return product.category === selectedCategory;
+            }
+          });
+        });
+      }
     }
     
     return relatedProducts.slice(0, limit);

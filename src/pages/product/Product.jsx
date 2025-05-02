@@ -30,7 +30,7 @@ export default function Product({ onCartClick, onCartOpen }) {
   const cart = useSelector((state) => state.cart.items);
   const [cartItems, setCartItems] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategories, setSelectedCategories] = useState(['All']);
 
   // Modern UI state variables
   const [sortOption, setSortOption] = useState('newest');
@@ -322,7 +322,23 @@ export default function Product({ onCartClick, onCartOpen }) {
 
   // Handle category selection
   const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
+    setSelectedCategories(prev => {
+      // If "All" is clicked
+      if (category === 'All') {
+        return ['All']; // Reset to just "All"
+      }
+      
+      // If already selected, remove it
+      if (prev.includes(category)) {
+        const newCategories = prev.filter(c => c !== category);
+        // If after removal no categories are left, set to "All"
+        return newCategories.length === 0 ? ['All'] : newCategories;
+      } else {
+        // If adding a new category, remove "All" if it's in the list
+        const newCategories = prev.filter(c => c !== 'All');
+        return [...newCategories, category];
+      }
+    });
   };
 
   // Handle sort option change
@@ -336,7 +352,7 @@ export default function Product({ onCartClick, onCartOpen }) {
   };
 
   // Filter and search products
-  const filteredProducts = searchAndFilterProducts(searchTerm, selectedCategory);
+  const filteredProducts = searchAndFilterProducts(searchTerm, selectedCategories);
 
   // Apply price filter
   const priceFilteredProducts = filteredProducts.filter(product =>
@@ -421,9 +437,11 @@ export default function Product({ onCartClick, onCartOpen }) {
           <div className="flex items-center justify-between py-3">
             <div className="flex items-center space-x-1">
               <h1 className="text-xl font-medium text-gray-900">Shop</h1>
-              {selectedCategory !== 'All' && (
+              {selectedCategories.length > 1 && (
                 <span className="hidden sm:inline-flex text-xs font-medium bg-black text-white px-2 py-0.5 rounded-full ml-2">
-                  {selectedCategory}
+                  {selectedCategories.length > 3 
+                    ? `${selectedCategories.length} categories` 
+                    : selectedCategories.filter(c => c !== 'All').join(', ')}
                 </span>
               )}
             </div>
@@ -447,7 +465,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                 aria-controls="filter-panel"
               >
                 <FiSliders className="h-4 w-4" />
-                {(selectedCategory !== 'All' || priceRange[0] > 0 || priceRange[1] < 100000) && (
+                {(selectedCategories.length > 1 || priceRange[0] > 0 || priceRange[1] < 100000) && (
                   <span className="absolute top-0 right-0 h-2 w-2 bg-blue-500 rounded-full" />
                 )}
               </button>
@@ -604,10 +622,10 @@ export default function Product({ onCartClick, onCartOpen }) {
             <div className="bg-white rounded-lg shadow-sm p-4 sticky top-20">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-md font-medium text-gray-900">Filters</h2>
-                {(selectedCategory !== 'All' || priceRange[0] > 0 || priceRange[1] < 100000) && (
+                {(selectedCategories.length > 1 || priceRange[0] > 0 || priceRange[1] < 100000) && (
                   <button
                     onClick={() => {
-                      setSelectedCategory('All');
+                      setSelectedCategories(['All']);
                       setPriceRange([0, 100000]);
                     }}
                     className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
@@ -620,19 +638,26 @@ export default function Product({ onCartClick, onCartOpen }) {
               <div className="mb-5">
                 <h3 className="text-xs font-medium text-gray-600 mb-2 flex justify-between items-center">
                   <span>Categories</span>
-                  <span className="text-xs text-gray-400">{categories.length}</span>
+                  <span className="text-xs text-gray-400">
+                    {selectedCategories.includes('All') ? 'All' : `${selectedCategories.length} selected`}
+                  </span>
                 </h3>
                 <div className="space-y-1">
                   {categories.map((category) => (
                     <button
                       key={category}
                       onClick={() => handleCategoryChange(category)}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-all ${selectedCategory === category
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-all ${selectedCategories.includes(category)
                         ? 'bg-gray-900 text-white font-medium'
                         : 'text-gray-700 hover:bg-gray-100'
                         }`}
                     >
-                      {category}
+                      <div className="flex justify-between items-center">
+                        <span>{category}</span>
+                        {category === 'All' && selectedCategories.includes('All') && (
+                          <span className="bg-gray-700 text-white rounded-full text-xs px-1.5 py-0.5">Default</span>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -742,16 +767,16 @@ export default function Product({ onCartClick, onCartOpen }) {
                     <div className="mb-5">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-xs font-medium text-gray-600">Categories</h3>
-                        {selectedCategory !== 'All' && (
+                        {selectedCategories.length > 1 && (
                           <button
-                            onClick={() => handleCategoryChange('All')}
+                            onClick={() => setSelectedCategories(['All'])}
                             className="text-xs text-blue-600 hover:underline"
                           >
                             Clear
                           </button>
                         )}
                       </div>
-
+                      
                       <div className="space-y-1">
                         {categories.map((category) => (
                           <button
@@ -759,12 +784,17 @@ export default function Product({ onCartClick, onCartOpen }) {
                             onClick={() => {
                               handleCategoryChange(category);
                             }}
-                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-all ${selectedCategory === category
+                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-all ${selectedCategories.includes(category)
                               ? 'bg-gray-900 text-white font-medium'
                               : 'text-gray-700 hover:bg-gray-100'
                               }`}
                           >
-                            {category}
+                            <div className="flex justify-between items-center">
+                              <span>{category}</span>
+                              {category === 'All' && selectedCategories.includes('All') && (
+                                <span className="bg-gray-700 text-white rounded-full text-xs px-1.5 py-0.5">Default</span>
+                              )}
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -868,24 +898,32 @@ export default function Product({ onCartClick, onCartOpen }) {
             <div className="flex flex-wrap items-center justify-between mb-5">
               <div className="text-sm text-gray-500 mb-2 sm:mb-0">
                 Showing <span className="font-medium text-gray-900">{sortedProducts.length}</span> {sortedProducts.length === 1 ? 'product' : 'products'}
-                {selectedCategory !== 'All' && (
-                  <span> in <span className="font-medium text-gray-900">{selectedCategory}</span></span>
+                {selectedCategories.length > 1 && (
+                  <span> in <span className="font-medium text-gray-900">{selectedCategories.join(', ')}</span></span>
                 )}
               </div>
 
               {/* Active Filters Pills */}
-              {(selectedCategory !== 'All' || priceRange[0] > 0 || priceRange[1] < 100000) && (
+              {(selectedCategories.length > 1 || priceRange[0] > 0 || priceRange[1] < 100000) && (
                 <div className="flex flex-wrap gap-2">
-                  {selectedCategory !== 'All' && (
-                    <button
-                      onClick={() => handleCategoryChange('All')}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white"
-                    >
-                      {selectedCategory}
-                      <FaXmark className="ml-1 h-3 w-3" />
-                    </button>
+                  {selectedCategories.length > 1 && (
+                    <>
+                      {selectedCategories.filter(cat => cat !== 'All').map(category => (
+                        <button
+                          key={category}
+                          onClick={() => {
+                            // Remove this category from the selected categories
+                            setSelectedCategories(prev => prev.filter(c => c !== category));
+                          }}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white"
+                        >
+                          {category}
+                          <FaXmark className="ml-1 h-3 w-3" />
+                        </button>
+                      ))}
+                    </>
                   )}
-
+                  
                   {(priceRange[0] > 0 || priceRange[1] < 100000) && (
                     <button
                       onClick={() => setPriceRange([0, 100000])}
@@ -895,10 +933,10 @@ export default function Product({ onCartClick, onCartOpen }) {
                       <FaXmark className="ml-1 h-3 w-3" />
                     </button>
                   )}
-
+                  
                   <button
                     onClick={() => {
-                      setSelectedCategory('All');
+                      setSelectedCategories(['All']);
                       setPriceRange([0, 100000]);
                     }}
                     className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
@@ -932,14 +970,18 @@ export default function Product({ onCartClick, onCartOpen }) {
                     <h3 className="text-2xl font-bold text-gray-900 mb-3">No products found</h3>
                     <p className="text-gray-600 mb-6">
                       {searchTerm
-                        ? `We couldn't find any products matching "${searchTerm}" in ${selectedCategory !== 'All' ? selectedCategory : 'any'} category.`
-                        : `No products available in ${selectedCategory} category.`}
+                        ? `We couldn't find any products matching "${searchTerm}" in ${selectedCategories.length > 1 && !selectedCategories.includes('All') 
+                          ? `the selected categories (${selectedCategories.filter(c => c !== 'All').join(', ')})`
+                          : 'any category'}.`
+                        : `No products available in ${selectedCategories.length > 1 && !selectedCategories.includes('All')
+                          ? `the selected categories (${selectedCategories.filter(c => c !== 'All').join(', ')})`
+                          : 'any category'}.`}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <button
                         onClick={() => {
                           setSearchTerm('');
-                          setSelectedCategory('All');
+                          setSelectedCategories(['All']);
                           setPriceRange([0, 100000]);
                         }}
                         className="px-5 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
