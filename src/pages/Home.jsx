@@ -3,6 +3,8 @@ import Product from "../pages/product/Product";
 import Banner from "../component/banner/Banner";
 import CartBox from "../component/cartbox/CartBox";
 import OfferModal from "../component/modal/OfferModal";
+import FeaturedProducts from "../component/FeaturedProducts";
+import TrendingProducts from "../component/TrendingProducts";
 
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -26,6 +28,8 @@ export default function Home() {
   return (
     <>
       <Banner />
+      {/* <FeaturedProducts title="New Arrivals" maxProducts={8} /> */}
+      {/* <TrendingProducts title="Trending Now" maxProducts={10} /> */}
       <Product onCartOpen={handleOpenCart} />
       {isCartOpen && <CartBox />} {/* using isCartOpen */}
       
