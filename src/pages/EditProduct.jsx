@@ -74,12 +74,12 @@ const EditProduct = () => {
     const loadProductData = async () => {
         try {
             setLoading(true);
-            // Get product from the context
+            // Get product from the API context (synchronous operation)
             const product = getProductById(productId);
             
             if (!product) {
                 toast.error("Product not found");
-                navigate('/product');
+                navigate('/admin-products');
                 return;
             }
 
@@ -102,6 +102,7 @@ const EditProduct = () => {
         } catch (error) {
             console.error("Error loading product:", error);
             toast.error("Error loading product details");
+            navigate('/admin-products');
         } finally {
             setLoading(false);
         }
@@ -193,8 +194,8 @@ const EditProduct = () => {
             
             toast.success("Product updated successfully!");
             
-            // Navigate back to products page
-            navigate('/product');
+            // Navigate back to admin products page
+            navigate('/admin-products');
         } catch (error) {
             const errorMessage = error.message || "Failed to update product";
             toast.error(errorMessage);

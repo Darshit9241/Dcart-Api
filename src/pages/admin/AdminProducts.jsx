@@ -63,7 +63,7 @@ const AdminProducts = () => {
   };
 
   const handleEditProduct = (product) => {
-    navigate('/edit-product', { state: { product } });
+    navigate(`/edit-product/${product.id}`);
   };
 
   const handleDeleteProduct = useCallback((productId) => {
