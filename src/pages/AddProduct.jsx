@@ -100,8 +100,8 @@ const AddProduct = () => {
                     return;
                 }
                 
-                // Set file and create preview URL
-                setFormData({ ...formData, photo: file });
+                // Use functional state update to avoid stale state issues on mobile
+                setFormData(prevData => ({ ...prevData, photo: file }));
                 
                 try {
                     const previewUrl = URL.createObjectURL(file);
@@ -111,7 +111,7 @@ const AddProduct = () => {
                     toast.error("Unable to preview image. Please try another file.");
                 }
             } else {
-                setFormData({ ...formData, photo: null });
+                setFormData(prevData => ({ ...prevData, photo: null }));
                 setPreview(null);
             }
         } else if (name === 'discount') {
@@ -184,13 +184,29 @@ const AddProduct = () => {
                 return;
             }
             
+            // Create a new FileReader for mobile compatibility
             const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
+            
+            // Set up events before reading the file (important for mobile)
+            reader.onload = () => {
+                // Ensure we have a valid result before resolving
+                if (reader.result && typeof reader.result === 'string') {
+                    resolve(reader.result);
+                } else {
+                    reject(new Error('File reading failed'));
+                }
+            };
+            
             reader.onerror = (error) => {
                 console.error('Error reading file:', error);
                 reject(new Error('Failed to read file'));
             };
+            
+            // Add additional error handling
+            reader.onabort = () => reject(new Error('File reading aborted'));
+            
+            // Read the file as a data URL
+            reader.readAsDataURL(file);
         });
     };
 
@@ -199,6 +215,15 @@ const AddProduct = () => {
         setIsSubmitting(true);
         setUploadError(null);
 
+        // Validate all required fields
+        if (!formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability) {
+            setUploadError("Please fill in all required fields");
+            setIsSubmitting(false);
+            toast.error("Please fill in all required fields");
+            return;
+        }
+
+        // Check if the photo is available
         if (!formData.photo) {
             setUploadError("Product image is required");
             setIsSubmitting(false);
@@ -207,13 +232,24 @@ const AddProduct = () => {
         }
 
         try {
-            // Convert photo to base64
+            // Convert photo to base64 with retry mechanism for mobile
             let base64Image;
-            try {
-                base64Image = await fileToBase64(formData.photo);
-            } catch (fileError) {
-                console.error("Error converting file to base64:", fileError);
-                throw new Error(fileError.message || "Failed to process image file");
+            let retryCount = 0;
+            const maxRetries = 2;
+            
+            while (retryCount <= maxRetries) {
+                try {
+                    base64Image = await fileToBase64(formData.photo);
+                    break; // If successful, exit the loop
+                } catch (fileError) {
+                    retryCount++;
+                    if (retryCount > maxRetries) {
+                        console.error("Error converting file to base64:", fileError);
+                        throw new Error(fileError.message || "Failed to process image file");
+                    }
+                    // Wait before retrying (helps on mobile)
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
             }
 
             // Create product object
@@ -352,7 +388,12 @@ const AddProduct = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl backdrop-blur-sm bg-opacity-90 border border-gray-100">
+                <form 
+                    onSubmit={handleSubmit} 
+                    className="bg-white p-8 rounded-2xl shadow-xl backdrop-blur-sm bg-opacity-90 border border-gray-100"
+                    encType="multipart/form-data"
+                    noValidate
+                >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Left column - Basic Info & Image */}
                         <div className="space-y-8">
@@ -690,7 +731,11 @@ const AddProduct = () => {
                         <button
                             type="submit"
                             disabled={isSubmitting || !formData.photo || !formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability}
-                            className={`w-full inline-flex justify-center items-center px-6 py-4 border border-transparent text-base font-medium rounded-xl shadow-md text-white ${isSubmitting || !formData.photo || !formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'} transition-all duration-300`}
+                            onClick={(e) => {
+                                if (e) e.preventDefault();
+                                handleSubmit(e);
+                            }}
+                            className={`w-full inline-flex justify-center items-center px-6 py-4 border border-transparent text-base font-medium rounded-xl shadow-md text-white ${isSubmitting || !formData.photo || !formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 active:from-indigo-800 active:to-purple-800'} transition-all duration-300`}
                         >
                             {isSubmitting ? (
                                 <>
