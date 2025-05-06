@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useTheme, ThemeProvider } from '../component/header/ThemeContext';
+import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
 import CustomerManagement from '../component/admin/CustomerManagement';
 import AdminLayout from './AdminLayout';
 
 const AdminCustomers = () => {
-  const { isDarkMode } = useTheme();
+  const { isDarkMode } = useAdminTheme();
   
   // Search state
   const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -201,9 +201,9 @@ const AdminCustomers = () => {
 // Wrap with ThemeProvider
 const AdminCustomersWithTheme = () => {
   return (
-    <ThemeProvider>
+    <AdminThemeProvider>
       <AdminCustomers />
-    </ThemeProvider>
+    </AdminThemeProvider>
   );
 };
 

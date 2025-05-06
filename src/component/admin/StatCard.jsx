@@ -1,8 +1,8 @@
 import React from 'react';
-import { useTheme } from '../../component/header/ThemeContext';
+import { useAdminTheme } from './AdminThemeContext';
 
 const StatCard = ({ title, value, icon, trend, color = 'blue' }) => {
-  const { isDarkMode } = useTheme();
+  const { isDarkMode } = useAdminTheme();
   
   const colorClasses = {
     blue: {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useTheme, ThemeProvider } from '../component/header/ThemeContext';
+import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
 import OrderManagement from '../component/admin/OrderManagement';
 import AdminLayout from './AdminLayout';
 import { useSelector } from 'react-redux';
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
 const AdminOrders = () => {
-  const { isDarkMode } = useTheme();
+  const { isDarkMode } = useAdminTheme();
   const navigate = useNavigate();
   const currentCurrency = useSelector((state) => state.currency.currentCurrency);
   
@@ -150,9 +150,9 @@ const AdminOrders = () => {
 // Wrap with ThemeProvider
 const AdminOrdersWithTheme = () => {
   return (
-    <ThemeProvider>
+    <AdminThemeProvider>
       <AdminOrders />
-    </ThemeProvider>
+    </AdminThemeProvider>
   );
 };
 

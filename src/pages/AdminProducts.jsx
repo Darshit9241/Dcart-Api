@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useTheme, ThemeProvider } from '../component/header/ThemeContext';
+import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
 import ProductManagement from '../component/admin/ProductManagement';
 import AdminLayout from './AdminLayout';
 import { useSelector, useDispatch } from 'react-redux';
@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import defaultProducts from '../component/ProductData';
 
 const AdminProducts = () => {
-  const { isDarkMode } = useTheme();
+  const { isDarkMode } = useAdminTheme();
   const navigate = useNavigate();
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'ascending' });
@@ -163,9 +163,9 @@ const AdminProducts = () => {
 // Wrap with ThemeProvider
 const AdminProductsWithTheme = () => {
   return (
-    <ThemeProvider>
+    <AdminThemeProvider>
       <AdminProducts />
-    </ThemeProvider>
+    </AdminThemeProvider>
   );
 };
 

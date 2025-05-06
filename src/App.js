@@ -37,9 +37,13 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminOrders from "./pages/AdminOrders";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
+import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
+import AdminActivityPage from "./pages/AdminActivityPage";
 import AdminLogin from './component/admin/AdminLogin';
 import AdminSignup from './component/admin/AdminSignup';
 import AdminProtectedRoute from './component/AdminProtectedRoute';
+import AdminProfile from './component/admin/AdminProfile';
+import AdminNotifications from './component/admin/AdminNotifications';
 
 function PrivateRoute() {
   const token = localStorage.getItem("token");
@@ -90,7 +94,11 @@ export default function App() {
             <Route path="/admin-products" element={<AdminProducts />} />
             <Route path="/admin-orders" element={<AdminOrders />} />
             <Route path="/admin-customers" element={<AdminCustomers />} />
+            <Route path="/admin-analytics" element={<AdminAnalyticsPage />} />
+            <Route path="/admin-activity" element={<AdminActivityPage />} />
             <Route path="/admin-settings" element={<AdminSettingsPage />} />
+            <Route path="/admin-profile" element={<AdminProfile />} />
+            <Route path="/admin-notifications" element={<AdminNotifications />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />

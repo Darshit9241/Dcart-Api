@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { FiPackage, FiAlertCircle, FiInfo, FiShoppingBag, FiX, FiCheck, FiDollarSign, FiClock, FiMail, FiCalendar, FiTrash2 } from 'react-icons/fi';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { FiPackage, FiAlertCircle, FiInfo, FiShoppingBag, FiX, FiCheck, FiDollarSign, FiClock, FiMail, FiCalendar, FiTrash2, FiChevronDown } from 'react-icons/fi';
 import { FaSearch, FaUser } from 'react-icons/fa';
 import { getCurrencySymbol } from '../../utils/currencyUtils';
 
@@ -22,6 +22,30 @@ const OrderManagement = ({
 }) => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [emailFilter, setEmailFilter] = useState('');
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const statusDropdownRef = useRef(null);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
+        setShowStatusDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Define status options
+  const statusOptions = [
+    { value: 'all', label: 'All Status', color: 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200' },
+    { value: 'processing', label: 'Processing', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
+    { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
+    { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }
+  ];
+  
+  // Get current status option
+  const currentStatus = statusOptions.find(option => option.value === filterStatus) || statusOptions[0];
   
   // Status badge component for reuse
   const StatusBadge = ({ status }) => (
@@ -122,16 +146,64 @@ const OrderManagement = ({
               className={`w-full sm:w-56 md:w-60 pl-10 py-2 border ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'} rounded-lg`}
             />
           </div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className={`px-3 py-2 border ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'} rounded-lg`}
-          >
-            <option value="all">All Status</option>
-            <option value="processing">Processing</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+
+          {/* Custom Status Dropdown */}
+          <div className="relative w-full sm:w-auto" ref={statusDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+              className={`flex items-center justify-between w-full sm:w-40 px-3 py-2 border ${
+                isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'
+              } rounded-lg transition-colors`}
+              aria-haspopup="true"
+              aria-expanded={showStatusDropdown}
+            >
+              <div className="flex items-center">
+                <span className={`inline-flex items-center justify-center w-2 h-2 mr-2 rounded-full ${
+                  currentStatus.value === 'all' ? 'bg-gray-400' :
+                  currentStatus.value === 'processing' ? 'bg-yellow-400' :
+                  currentStatus.value === 'completed' ? 'bg-green-400' :
+                  'bg-red-400'
+                }`}></span>
+                <span className="truncate">{currentStatus.label}</span>
+              </div>
+              <FiChevronDown className={`ml-2 h-4 w-4 transition-transform ${showStatusDropdown ? 'transform rotate-180' : ''}`} />
+            </button>
+            
+            {/* Dropdown Menu */}
+            {showStatusDropdown && (
+              <div className={`absolute z-10 mt-1 w-full rounded-md shadow-lg ${
+                isDarkMode ? 'bg-gray-700' : 'bg-white'
+              } ring-1 ring-black ring-opacity-5 focus:outline-none`}
+              >
+                <div className="py-1 max-h-60 overflow-auto" role="menu" aria-orientation="vertical">
+                  {statusOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setFilterStatus(option.value);
+                        setShowStatusDropdown(false);
+                      }}
+                      className={`w-full text-left flex items-center px-4 py-2 text-sm ${
+                        option.value === filterStatus
+                          ? isDarkMode ? 'bg-gray-600' : 'bg-gray-100'
+                          : isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-50'
+                      } transition-colors`}
+                      role="menuitem"
+                    >
+                      <span className={`inline-flex items-center justify-center w-2 h-2 mr-2 rounded-full ${
+                        option.value === 'all' ? 'bg-gray-400' :
+                        option.value === 'processing' ? 'bg-yellow-400' :
+                        option.value === 'completed' ? 'bg-green-400' :
+                        'bg-red-400'
+                      }`}></span>
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           
           {orders && orders.length > 0 && (
             <button

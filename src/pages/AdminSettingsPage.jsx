@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme, ThemeProvider } from '../component/header/ThemeContext';
+import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
 import AdminSettings from '../component/admin/AdminSettings';
 import AdminLayout from './AdminLayout';
 import { useSelector } from 'react-redux';
 
 const AdminSettingsPage = () => {
-  const { isDarkMode } = useTheme();
+  const { isDarkMode } = useAdminTheme();
   const currentCurrency = useSelector((state) => state.currency.currentCurrency);
   const [activeSettingsTab, setActiveSettingsTab] = useState('store');
   
   // Store settings state
   const [storeSettings, setStoreSettings] = useState({
     storeName: 'DCart Store',
-    storeEmail: 'info@dcartstore.com',
-    storePhone: '+1 234 567 8901',
+    storeEmail: 'dcart@gmail.com',
+    storePhone: '+91 9737381473',
     storeAddress: '123 Shopping Street, E-Commerce City',
     taxRate: 8.5,
     shippingFee: 15,
@@ -133,9 +133,9 @@ const AdminSettingsPage = () => {
 // Wrap with ThemeProvider
 const AdminSettingsPageWithTheme = () => {
   return (
-    <ThemeProvider>
+    <AdminThemeProvider>
       <AdminSettingsPage />
-    </ThemeProvider>
+    </AdminThemeProvider>
   );
 };
 

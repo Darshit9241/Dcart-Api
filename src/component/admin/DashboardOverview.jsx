@@ -9,6 +9,7 @@ const DashboardOverview = ({products, orders, users, isDarkMode, currentCurrency
   
   // Calculate statistics
   const totalProducts = products.length; // This should be dynamic in a real app
+  console.log("totalProducts", totalProducts);
   const totalOrders = orders.length;
   const totalRevenue = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
   const activeUsers = users.filter(user => user.status === 'active').length;
