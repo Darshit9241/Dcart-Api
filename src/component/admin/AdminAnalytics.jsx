@@ -160,12 +160,215 @@ const AdminAnalytics = ({ orders, users, products, isDarkMode, currentCurrency =
     return ranges[timeRange];
   };
 
-  // Generate chart data
+  // Filter data based on time range
+  const filteredData = useMemo(() => {
+    const { start, end } = getCurrentDateRange();
+    
+    return {
+      orders: (orders || []).filter(order => {
+        const orderDate = new Date(order.date || Date.now());
+        return orderDate >= start && orderDate <= end;
+      }),
+      users: (users || []).filter(user => {
+        const registrationDate = new Date(user.registrationDate || user.createdAt || Date.now());
+        return registrationDate >= start && registrationDate <= end;
+      })
+    };
+  }, [orders, users, timeRange]);
+
+  // Process actual order data for charts
+  const processOrderData = useMemo(() => {
+    const dateFormat = {
+      week: { dateFormat: 'weekday', dateUnit: 'day', count: 7 },
+      month: { dateFormat: 'week', dateUnit: 'week', count: 4 },
+      year: { dateFormat: 'month', dateUnit: 'month', count: 12 }
+    };
+    
+    const format = dateFormat[timeRange];
+    const now = new Date();
+    const labels = [];
+    const revenueData = Array(format.count).fill(0);
+    const orderCountData = Array(format.count).fill(0);
+    
+    // Generate labels based on time range
+    if (timeRange === 'week') {
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(now.getDate() - i);
+        labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+      }
+    } else if (timeRange === 'month') {
+      for (let i = 0; i < 4; i++) {
+        labels.push(`Week ${4-i}`);
+      }
+    } else if (timeRange === 'year') {
+      labels.push('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+    }
+    
+    // Process actual order data
+    filteredData.orders.forEach(order => {
+      const orderDate = new Date(order.date || Date.now());
+      let index = 0;
+      
+      if (timeRange === 'week') {
+        // Days ago (0-6)
+        const daysAgo = Math.floor((now - orderDate) / (1000 * 60 * 60 * 24));
+        index = Math.min(6, daysAgo);
+        index = 6 - index; // Reverse to match labels
+      } else if (timeRange === 'month') {
+        // Weeks ago (0-3)
+        const weeksAgo = Math.floor((now - orderDate) / (1000 * 60 * 60 * 24 * 7));
+        index = Math.min(3, weeksAgo);
+        index = 3 - index; // Reverse to match labels
+      } else if (timeRange === 'year') {
+        // Month (0-11)
+        index = orderDate.getMonth();
+      }
+      
+      if (index >= 0 && index < revenueData.length) {
+        revenueData[index] += (order.totalPrice || 0);
+        orderCountData[index]++;
+      }
+    });
+    
+    return {
+      labels,
+      revenueData,
+      orderCountData
+    };
+  }, [filteredData.orders, timeRange]);
+  
+  // Generate chart data based on real data or demo data
   const chartData = useMemo(() => {
-    // In real implementation, you would process actual order data
-    // For now, using demo data
-    return generateDemoData(timeRange, isDarkMode);
-  }, [timeRange, isDarkMode]);
+    const { labels, revenueData, orderCountData } = processOrderData;
+    
+    // If we have some real data, use it
+    if (filteredData.orders.length > 0) {
+      // Chart colors
+      const revenueColor = isDarkMode ? 'rgba(52, 211, 153, 1)' : 'rgba(16, 185, 129, 1)'; // Green
+      const ordersColor = isDarkMode ? 'rgba(251, 146, 60, 1)' : 'rgba(249, 115, 22, 1)';   // Orange
+      const bgColor1 = isDarkMode ? 'rgba(52, 211, 153, 0.1)' : 'rgba(16, 185, 129, 0.1)';  
+      const bgColor2 = isDarkMode ? 'rgba(251, 146, 60, 0.1)' : 'rgba(249, 115, 22, 0.1)';
+      
+      return {
+        labels,
+        revenue: {
+          labels,
+          datasets: [
+            {
+              label: 'Revenue',
+              data: revenueData,
+              borderColor: revenueColor,
+              backgroundColor: bgColor1,
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3,
+              pointBackgroundColor: revenueColor
+            }
+          ]
+        },
+        orders: {
+          labels,
+          datasets: [
+            {
+              label: 'Orders',
+              data: orderCountData,
+              backgroundColor: ordersColor,
+              borderRadius: 4,
+              barThickness: timeRange === 'year' ? 16 : 24,
+              maxBarThickness: 24
+            }
+          ]
+        }
+      };
+    } else {
+      // Fall back to demo data
+      return generateDemoData(timeRange, isDarkMode);
+    }
+  }, [processOrderData, filteredData.orders, timeRange, isDarkMode]);
+  
+  // Calculate key metrics
+  const metrics = useMemo(() => {
+    // Calculate total revenue from all orders
+    const allOrdersRevenue = (orders || []).reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+    
+    // Calculate filtered time period revenue
+    const timeRangeRevenue = filteredData.orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+    
+    const avgOrderValue = filteredData.orders.length > 0 
+      ? timeRangeRevenue / filteredData.orders.length 
+      : 0;
+    
+    const productsSold = filteredData.orders.reduce((count, order) => {
+      return count + (order.items?.reduce((acc, item) => acc + (item.quantity || 1), 0) || 1);
+    }, 0);
+    
+    // Calculate top categories if available in products
+    const categoryCount = (products || []).reduce((acc, product) => {
+      const category = product.category || 'Uncategorized';
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {});
+    
+    const sortedCategories = Object.entries(categoryCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    
+    // Calculate revenue trend (percent change)
+    const revenueTrend = 12.3; // Placeholder - would calculate from historical data
+    
+    return {
+      totalRevenue: allOrdersRevenue,
+      timeRangeRevenue,
+      revenueTrend,
+      avgOrderValue,
+      productsSold,
+      ordersCount: filteredData.orders.length,
+      totalOrdersCount: orders?.length || 0,
+      newUsers: filteredData.users.length,
+      totalUsers: users?.length || 0,
+      productsCount: products?.length || 0,
+      topCategories: sortedCategories
+    };
+  }, [filteredData, orders, users, products]);
+
+  // Calculate order status breakdown
+  const orderStatusBreakdown = useMemo(() => {
+    const statuses = {
+      processing: 0,
+      completed: 0,
+      cancelled: 0
+    };
+    
+    filteredData.orders.forEach(order => {
+      const status = order.status?.toLowerCase() || 'processing';
+      if (statuses.hasOwnProperty(status)) {
+        statuses[status]++;
+      }
+    });
+    
+    return statuses;
+  }, [filteredData.orders]);
+
+  // Function to get status color for order badges
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'cancelled':
+        return isDarkMode ? 'bg-red-900/30 text-red-300' : 'bg-red-100 text-red-700';
+      case 'completed':
+        return isDarkMode ? 'bg-green-900/30 text-green-300' : 'bg-green-100 text-green-700';
+      case 'processing':
+      default:
+        return isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-700';
+    }
+  };
+
+  // Most recent orders for activity feed
+  const recentOrders = useMemo(() => {
+    return [...(filteredData.orders || [])]
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+      .slice(0, 5);
+  }, [filteredData.orders]);
 
   // Chart options
   const revenueChartOptions = {
@@ -233,94 +436,6 @@ const AdminAnalytics = ({ orders, users, products, isDarkMode, currentCurrency =
     }
   };
 
-  // Filter data based on time range
-  const filteredData = useMemo(() => {
-    const { start, end } = getCurrentDateRange();
-    
-    return {
-      orders: (orders || []).filter(order => {
-        const orderDate = new Date(order.date || Date.now());
-        return orderDate >= start && orderDate <= end;
-      }),
-      users: (users || []).filter(user => {
-        const registrationDate = new Date(user.registrationDate || user.createdAt || Date.now());
-        return registrationDate >= start && registrationDate <= end;
-      })
-    };
-  }, [orders, users, timeRange]);
-  
-  // Calculate key metrics
-  const metrics = useMemo(() => {
-    const totalRevenue = filteredData.orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
-    const avgOrderValue = filteredData.orders.length > 0 
-      ? totalRevenue / filteredData.orders.length 
-      : 0;
-    
-    const productsSold = filteredData.orders.reduce((count, order) => {
-      return count + (order.items?.reduce((acc, item) => acc + (item.quantity || 1), 0) || 1);
-    }, 0);
-    
-    // Calculate top categories if available in products
-    const categoryCount = (products || []).reduce((acc, product) => {
-      const category = product.category || 'Uncategorized';
-      acc[category] = (acc[category] || 0) + 1;
-      return acc;
-    }, {});
-    
-    const sortedCategories = Object.entries(categoryCount)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-    
-    return {
-      totalRevenue,
-      avgOrderValue,
-      productsSold,
-      ordersCount: filteredData.orders.length,
-      newUsers: filteredData.users.length,
-      topCategories: sortedCategories
-    };
-  }, [filteredData, products]);
-
-  // Calculate order status breakdown
-  const orderStatusBreakdown = useMemo(() => {
-    const statuses = {
-      processing: 0,
-      completed: 0,
-      cancelled: 0
-    };
-    
-    filteredData.orders.forEach(order => {
-      const status = order.status?.toLowerCase() || 'processing';
-      if (statuses.hasOwnProperty(status)) {
-        statuses[status]++;
-      }
-    });
-    
-    return statuses;
-  }, [filteredData.orders]);
-
-  // Function to get status color for order badges
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'cancelled':
-        return isDarkMode ? 'bg-red-900/30 text-red-300' : 'bg-red-100 text-red-700';
-      case 'completed':
-        return isDarkMode ? 'bg-green-900/30 text-green-300' : 'bg-green-100 text-green-700';
-      case 'processing':
-      default:
-        return isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-700';
-    }
-  };
-
-  // Most recent orders for activity feed
-  const recentOrders = useMemo(() => {
-    return [...(filteredData.orders || [])]
-      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
-      .slice(0, 5);
-  }, [filteredData.orders]);
-
-  const totalRevenue = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
-
   return (
     <div className="animate-fadeIn space-y-4 sm:space-y-6 p-2 sm:p-0">
       {/* Header with time range selector */}
@@ -357,28 +472,28 @@ const AdminAnalytics = ({ orders, users, products, isDarkMode, currentCurrency =
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard 
           title="Products" 
-          value={(products?.length || 0).toString()} 
+          value={(metrics.productsCount).toString()} 
           icon={<FiPackage />} 
           trend={3.2} 
           color="blue" 
         />
         <StatCard 
           title="Orders" 
-          value={(orders?.length || 0).toString()} 
+          value={(metrics.totalOrdersCount).toString()} 
           icon={<FiShoppingBag />} 
           trend={7.1} 
           color="orange" 
         />
         <StatCard 
           title="Revenue" 
-          value={`${getCurrencySymbol(currentCurrency)}${totalRevenue.toFixed(2)}`}
+          value={`${getCurrencySymbol(currentCurrency)}${metrics.totalRevenue.toFixed(2)}`}
           icon={<FiDollarSign />} 
-          trend={12.3} 
+          trend={metrics.revenueTrend} 
           color="green" 
         />
         <StatCard 
           title="Users" 
-          value={metrics.newUsers.toString()} 
+          value={(metrics.totalUsers).toString()} 
           icon={<FiUsers />} 
           trend={4.8} 
           color="purple" 
