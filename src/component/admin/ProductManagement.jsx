@@ -38,9 +38,18 @@ const ProductManagement = ({
 
   // Calculate discount percentage for a product
   const getDiscountPercent = (product) => {
-    return product.discount 
-      ? parseInt(product.discount.replace('-', '').replace('%', '')) 
-      : calculateDiscountPercentage(product.oldPrice, product.price);
+    if (product.discount) {
+      // Check if discount is a string that can be processed
+      if (typeof product.discount === 'string') {
+        return parseInt(product.discount.replace('-', '').replace('%', ''));
+      } 
+      // If it's a number already, use it directly
+      else if (typeof product.discount === 'number') {
+        return product.discount;
+      }
+    }
+    // Fallback to calculating from price difference
+    return calculateDiscountPercentage(product.oldPrice, product.price);
   };
 
   return (
