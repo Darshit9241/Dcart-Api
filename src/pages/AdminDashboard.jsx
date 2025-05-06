@@ -5,7 +5,7 @@ import {
   FiMenu, FiLogOut, FiSettings, FiBarChart2 
 } from 'react-icons/fi';
 import { FaUser, FaSearch, FaKey, FaUserCircle } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import defaultProducts from '../component/ProductData';
 import { removeProduct } from '../redux/productSlice';
@@ -374,6 +374,15 @@ const AdminDashboardContent = () => {
   
   // Check for authentication and load admin profile data
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Set active tab based on location state if available
+  useEffect(() => {
+    if (location.state && location.state.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
+  
   useEffect(() => {
     // Check if admin is logged in
     const adminToken = localStorage.getItem('adminToken');

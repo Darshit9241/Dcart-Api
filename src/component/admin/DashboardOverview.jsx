@@ -1,9 +1,12 @@
 import React from 'react';
 import { FiShoppingBag, FiUsers, FiDollarSign, FiPackage } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 import StatCard from './StatCard';
 import { getCurrencySymbol } from '../../utils/currencyUtils';
 
 const DashboardOverview = ({products, orders, users, isDarkMode, currentCurrency = 'USD' }) => {
+  const navigate = useNavigate();
+  
   // Calculate statistics
   const totalProducts = products.length; // This should be dynamic in a real app
   const totalOrders = orders.length;
@@ -34,6 +37,12 @@ const DashboardOverview = ({products, orders, users, isDarkMode, currentCurrency
     subtext: isDarkMode ? 'text-gray-400' : 'text-gray-500',
     card: isDarkMode ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100',
     button: isDarkMode ? 'border-gray-700 text-orange-400 hover:bg-gray-700' : 'border-gray-200 text-orange-600 hover:bg-gray-50'
+  };
+  
+  // Function to navigate to orders tab
+  const navigateToOrders = () => {
+    // Navigate to admin dashboard with orders tab active
+    navigate('/admin-dashboard', { state: { activeTab: 'orders' } });
   };
 
   return (
@@ -88,7 +97,9 @@ const DashboardOverview = ({products, orders, users, isDarkMode, currentCurrency
       <div className={`rounded-xl p-4 ${themeClasses.container} shadow-sm`}>
         <div className="flex justify-between items-center mb-3">
           <h2 className={`text-lg font-semibold ${themeClasses.title}`}>Recent Orders</h2>
-          <button className={`text-sm font-medium ${themeClasses.button} px-3 py-1 rounded-lg border`}>View All</button>
+          <button 
+            onClick={navigateToOrders}
+            className={`text-sm font-medium ${themeClasses.button} px-3 py-1 rounded-lg border`}>View All</button>
         </div>
         
         {recentOrders.length > 0 ? (
