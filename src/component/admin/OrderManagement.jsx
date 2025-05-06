@@ -21,6 +21,7 @@ const OrderManagement = ({
   handleDeleteAllOrders
 }) => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [emailFilter, setEmailFilter] = useState('');
   
   // Status badge component for reuse
   const StatusBadge = ({ status }) => (
@@ -38,6 +39,27 @@ const OrderManagement = ({
       return dateB - dateA; // Sort descending (newest first)
     });
   }, [orders]);
+  
+  // Filter orders by search term, status and email
+  const filteredOrders = useMemo(() => {
+    if (!sortedOrders) return [];
+    
+    return sortedOrders.filter(order => {
+      // Filter by search term (check order ID, name, etc.)
+      const searchMatch = !searchTerm || 
+        order.id.toString().includes(searchTerm) || 
+        (order.userInfo.name && order.userInfo.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      // Filter by status
+      const statusMatch = filterStatus === 'all' || order.status === filterStatus;
+      
+      // Filter by email
+      const emailMatch = !emailFilter || 
+        (order.userInfo.email && order.userInfo.email.toLowerCase().includes(emailFilter.toLowerCase()));
+        
+      return searchMatch && statusMatch && emailMatch;
+    });
+  }, [sortedOrders, searchTerm, filterStatus, emailFilter]);
   
   // Calculate statistics for the dashboard
   const stats = useMemo(() => {
@@ -87,6 +109,16 @@ const OrderManagement = ({
               placeholder="Search orders..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className={`w-full sm:w-56 md:w-60 pl-10 py-2 border ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'} rounded-lg`}
+            />
+          </div>
+          <div className="relative w-full sm:w-auto">
+            <FiMail className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+            <input
+              type="text"
+              placeholder="Filter by email..."
+              value={emailFilter}
+              onChange={(e) => setEmailFilter(e.target.value)}
               className={`w-full sm:w-56 md:w-60 pl-10 py-2 border ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'} rounded-lg`}
             />
           </div>
@@ -157,11 +189,11 @@ const OrderManagement = ({
           <FiAlertCircle className={`h-5 w-5 ${isDarkMode ? 'text-red-400' : 'text-red-500'} mr-3`} />
           <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>{error}</p>
         </div>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'} text-center`}>
           <FiPackage className={`mx-auto h-10 w-10 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} mb-2`} />
           <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-            {searchTerm || filterStatus !== 'all' 
+            {searchTerm || filterStatus !== 'all' || emailFilter
               ? 'No orders match your search criteria.' 
               : 'No orders available.'}
           </p>
@@ -174,7 +206,7 @@ const OrderManagement = ({
           </div>
           
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {sortedOrders.map((order) => (
+            {filteredOrders.map((order) => (
               <div key={order.id} className="p-4 transition-colors">
                 <div className="flex flex-wrap md:flex-nowrap items-center justify-between">
                   <div className="flex items-center space-x-4 w-full md:w-auto mb-3 md:mb-0">
@@ -266,7 +298,7 @@ const OrderManagement = ({
       
       {/* Mobile view for smaller screens */}
       <div className="sm:hidden mt-4 space-y-4">
-        {!loading && !error && sortedOrders.length > 0 && sortedOrders.map((order) => (
+        {!loading && !error && filteredOrders.length > 0 && filteredOrders.map((order) => (
           <div key={order.id} className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-white'} shadow`}>
             <div className="flex justify-between items-center mb-3">
               <span className="font-medium">#{order.id}</span>
