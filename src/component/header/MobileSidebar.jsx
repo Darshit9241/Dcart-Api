@@ -132,7 +132,7 @@ const MobileSidebar = ({
           </div>
 
           {/* Language Selector in Sidebar */}
-          <div className={`p-4 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+          {/* <div className={`p-4 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
             <div className="flex flex-wrap gap-2">
               {languages.map((lang) => (
                 <button
@@ -149,7 +149,7 @@ const MobileSidebar = ({
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* User Info */}
           {userEmail && (
