@@ -3,11 +3,14 @@ import { useAdminTheme, AdminThemeProvider } from '../../component/admin/AdminTh
 import AdminAnalytics from '../../component/admin/AdminAnalytics';
 import AdminLayout from './AdminLayout';
 import { useSelector } from 'react-redux';
+import { fetchProducts } from '../../utils/api';
+import defaultProducts from '../../component/ProductData';
 
 const AdminAnalyticsPage = () => {
   const { isDarkMode } = useAdminTheme();
   const currentCurrency = useSelector((state) => state.currency.currentCurrency) || 'USD';
-  
+  const reduxProducts = useSelector((state) => state.products);
+
   // States for data
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
@@ -15,63 +18,35 @@ const AdminAnalyticsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch data on component mount
-  const fetchData = useCallback(() => {
+  // Fetch data using useCallback to memoize the function
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch orders from localStorage
+      // Fetch products from the API using api.js
+      const formattedProducts = await fetchProducts();
+      setProducts(formattedProducts);
+      
+      // Get orders from localStorage
       const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
       setOrders(savedOrders);
       
-      // Fetch users from localStorage
+      // Get users from localStorage
       const savedUsers = JSON.parse(localStorage.getItem('users')) || [];
       setUsers(savedUsers);
       
-      // Try to get products from localStorage or Redux
-      const savedProducts = JSON.parse(localStorage.getItem('products')) || [];
-      
-      if (savedProducts.length > 0) {
-        setProducts(savedProducts);
-      } else {
-        // Fetch products from the API if none in localStorage
-        fetch('https://6812f392129f6313e20fe2b3.mockapi.io/getproduct/product')
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Failed to fetch products from API');
-            }
-            return response.json();
-          })
-          .then(apiProducts => {
-            // Process API products to match expected format
-            const formattedProducts = apiProducts.map(item => ({
-              id: item.id,
-              name: item.productname || item.name,
-              imgSrc: item.productimage,
-              image: item.productimage,
-              price: parseFloat(item.newprice) || 0,
-              oldPrice: parseFloat(item.oldprice) || 0,
-              description: item.discription,
-              discount: item.discount,
-              email: item.email
-            }));
-            
-            setProducts(formattedProducts);
-          })
-          .catch(err => {
-            console.error('Error fetching products:', err);
-            // If API fails, use empty array
-            setProducts([]);
-          });
-      }
-      
-      setError(null);
     } catch (err) {
-      console.error('Error loading data:', err);
-      setError('Failed to load data. Please try again later.');
+      console.error('Error fetching data:', err);
+      
+      // Fallback to Redux products or default products
+      if (reduxProducts && reduxProducts.length > 0) {
+        setProducts(reduxProducts);
+      } else {
+        setProducts(defaultProducts);
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [reduxProducts]);
 
   useEffect(() => {
     fetchData();

@@ -319,6 +319,8 @@ const AdminAnalytics = ({ orders, users, products, isDarkMode, currentCurrency =
       .slice(0, 5);
   }, [filteredData.orders]);
 
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+
   return (
     <div className="animate-fadeIn space-y-4 sm:space-y-6 p-2 sm:p-0">
       {/* Header with time range selector */}
@@ -369,7 +371,7 @@ const AdminAnalytics = ({ orders, users, products, isDarkMode, currentCurrency =
         />
         <StatCard 
           title="Revenue" 
-          value={`${getCurrencySymbol(currentCurrency)}${metrics.totalRevenue.toFixed(2)}`} 
+          value={`${getCurrencySymbol(currentCurrency)}${totalRevenue.toFixed(2)}`}
           icon={<FiDollarSign />} 
           trend={12.3} 
           color="green" 

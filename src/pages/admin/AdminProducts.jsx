@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { removeProduct } from '../../redux/productSlice';
 import { useNavigate } from 'react-router-dom';
 import defaultProducts from '../../component/ProductData';
+import { fetchProducts } from '../../utils/api';
 
 const AdminProducts = () => {
   const { isDarkMode } = useAdminTheme();
@@ -22,31 +23,11 @@ const AdminProducts = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const getProducts = async () => {
       setLoading(true);
       try {
-        // Fetch products from the API
-        const response = await fetch('https://6812f392129f6313e20fe2b3.mockapi.io/getproduct/product');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch products from API');
-        }
-        
-        const apiProducts = await response.json();
-        
-        // Process API products to match expected format
-        const formattedProducts = apiProducts.map(item => ({
-          id: item.id,
-          name: item.productname || item.name,
-          imgSrc: item.productimage,
-          image: item.productimage,
-          price: parseFloat(item.newprice) || 0,
-          oldPrice: parseFloat(item.oldprice) || 0,
-          description: item.discription,
-          discount: item.discount,
-          email: item.email
-        }));
-        
+        // Fetch products from the API using api.js
+        const formattedProducts = await fetchProducts();
         setProducts(formattedProducts);
         setError(null);
       } catch (err) {
@@ -64,7 +45,7 @@ const AdminProducts = () => {
       }
     };
     
-    fetchProducts();
+    getProducts();
   }, [reduxProducts]);
 
   // Selected product modal state
