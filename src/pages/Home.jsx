@@ -28,9 +28,9 @@ export default function Home() {
   return (
     <>
       <Banner />
-      {/* <FeaturedProducts title="New Arrivals" maxProducts={8} /> */}
+      <FeaturedProducts title="New Arrivals" maxProducts={4} />
       {/* <TrendingProducts title="Trending Now" maxProducts={10} /> */}
-      <Product onCartOpen={handleOpenCart} />
+      {/* <Product onCartOpen={handleOpenCart} /> */}
       {isCartOpen && <CartBox />} {/* using isCartOpen */}
       
       {/* Offer Modal for first-time visitors */}

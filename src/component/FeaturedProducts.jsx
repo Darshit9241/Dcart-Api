@@ -7,7 +7,7 @@ import { addToWishlist, removeFromWishlist } from "../redux/wishlistSlice";
 import { toast } from "react-toastify";
 import { useApi } from "../context/ApiContext";
 
-export default function FeaturedProducts({ title = "Featured Products", maxProducts = 8 }) {
+export default function FeaturedProducts({ title = "Featured Products", maxProducts = 4 }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const wishlist = useSelector((state) => state.wishlist);
