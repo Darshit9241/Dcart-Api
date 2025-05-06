@@ -38,8 +38,6 @@ const AddProduct = () => {
     // Loading state
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadError, setUploadError] = useState(null);
-    const [isOnline, setIsOnline] = useState(navigator.onLine);
-    const [retryAttempt, setRetryAttempt] = useState(0);
 
     // Get product categories from utility (excludes "All" category)
     const categories = getProductCategories();
@@ -53,20 +51,6 @@ const AddProduct = () => {
         "Limited Stock",
         "Discontinued"
     ];
-
-    // Monitor online status
-    useEffect(() => {
-        const handleOnline = () => setIsOnline(true);
-        const handleOffline = () => setIsOnline(false);
-
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, []);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -116,8 +100,8 @@ const AddProduct = () => {
                     return;
                 }
                 
-                // Use functional state update to avoid stale state issues on mobile
-                setFormData(prevData => ({ ...prevData, photo: file }));
+                // Set file and create preview URL
+                setFormData({ ...formData, photo: file });
                 
                 try {
                     const previewUrl = URL.createObjectURL(file);
@@ -127,7 +111,7 @@ const AddProduct = () => {
                     toast.error("Unable to preview image. Please try another file.");
                 }
             } else {
-                setFormData(prevData => ({ ...prevData, photo: null }));
+                setFormData({ ...formData, photo: null });
                 setPreview(null);
             }
         } else if (name === 'discount') {
@@ -200,29 +184,13 @@ const AddProduct = () => {
                 return;
             }
             
-            // Create a new FileReader for mobile compatibility
             const reader = new FileReader();
-            
-            // Set up events before reading the file (important for mobile)
-            reader.onload = () => {
-                // Ensure we have a valid result before resolving
-                if (reader.result && typeof reader.result === 'string') {
-                    resolve(reader.result);
-                } else {
-                    reject(new Error('File reading failed'));
-                }
-            };
-            
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
             reader.onerror = (error) => {
                 console.error('Error reading file:', error);
                 reject(new Error('Failed to read file'));
             };
-            
-            // Add additional error handling
-            reader.onabort = () => reject(new Error('File reading aborted'));
-            
-            // Read the file as a data URL
-            reader.readAsDataURL(file);
         });
     };
 
@@ -231,23 +199,6 @@ const AddProduct = () => {
         setIsSubmitting(true);
         setUploadError(null);
 
-        // Check if we're online
-        if (!isOnline) {
-            setUploadError("You appear to be offline. Please check your internet connection and try again.");
-            setIsSubmitting(false);
-            toast.error("No internet connection detected");
-            return;
-        }
-
-        // Validate all required fields
-        if (!formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability) {
-            setUploadError("Please fill in all required fields");
-            setIsSubmitting(false);
-            toast.error("Please fill in all required fields");
-            return;
-        }
-
-        // Check if the photo is available
         if (!formData.photo) {
             setUploadError("Product image is required");
             setIsSubmitting(false);
@@ -256,26 +207,13 @@ const AddProduct = () => {
         }
 
         try {
-            // Convert photo to base64 with retry mechanism for mobile
+            // Convert photo to base64
             let base64Image;
-            let retryCount = 0;
-            const maxRetries = 2;
-            
-            while (retryCount <= maxRetries) {
-                try {
-                    base64Image = await fileToBase64(formData.photo);
-                    break; // If successful, exit the loop
-                } catch (fileError) {
-                    retryCount++;
-                    setRetryAttempt(retryCount);
-                    if (retryCount > maxRetries) {
-                        console.error("Error converting file to base64:", fileError);
-                        throw new Error(fileError.message || "Failed to process image file. Try using a smaller image or a different format.");
-                    }
-                    // Wait before retrying (helps on mobile)
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    toast.info(`Processing image... attempt ${retryCount}/${maxRetries + 1}`);
-                }
+            try {
+                base64Image = await fileToBase64(formData.photo);
+            } catch (fileError) {
+                console.error("Error converting file to base64:", fileError);
+                throw new Error(fileError.message || "Failed to process image file");
             }
 
             // Create product object
@@ -301,68 +239,29 @@ const AddProduct = () => {
 
             // Send to API via context
             try {
-                let apiRetries = 0;
-                const maxApiRetries = 2;
-                let apiSuccess = false;
+                await addNewProduct(newProduct);
+                toast.success("Product uploaded successfully and added to API!");
                 
-                while (apiRetries <= maxApiRetries && !apiSuccess) {
-                    try {
-                        // Check online status again before making API request
-                        if (!navigator.onLine) {
-                            throw new Error("Internet connection lost. Please reconnect and try again.");
-                        }
-                    
-                        // Add timeout for mobile connections
-                        const apiPromise = addNewProduct(newProduct);
-                        const timeoutPromise = new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('API request timed out')), 15000)
-                        );
-                        
-                        // Race between API request and timeout
-                        await Promise.race([apiPromise, timeoutPromise]);
-                        apiSuccess = true;
-                        
-                        toast.success("Product uploaded successfully and added to API!");
-                        
-                        // Reset form
-                        setFormData({
-                            name: '',
-                            price: '',
-                            oldPrice: '',
-                            discount: '',
-                            description: '',
-                            category: '',
-                            categories: [],
-                            currency: 'USD',
-                            availability: '',
-                            photo: null,
-                        });
-                        setPreview(null);
-                        setRetryAttempt(0);
-                        
-                        // Navigate after successful submission
-                        navigate('/product');
-                        
-                    } catch (apiError) {
-                        apiRetries++;
-                        setRetryAttempt(apiRetries);
-                        console.error(`API Error (attempt ${apiRetries}/${maxApiRetries + 1}):`, apiError);
-                        
-                        if (apiRetries > maxApiRetries) {
-                            // If we've exceeded retries, throw the error
-                            throw new Error(apiError.message || "Failed to save product to database. Please check your internet connection and try again.");
-                        }
-                        
-                        // Wait longer between retries (mobile connections may be slower)
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        
-                        // Show retrying toast
-                        toast.info(`Connection issue. Retrying... (${apiRetries}/${maxApiRetries + 1})`);
-                    }
-                }
+                // Reset form
+                setFormData({
+                    name: '',
+                    price: '',
+                    oldPrice: '',
+                    discount: '',
+                    description: '',
+                    category: '',
+                    categories: [],
+                    currency: 'USD',
+                    availability: '',
+                    photo: null,
+                });
+                setPreview(null);
+                
+                // Navigate after successful submission
+                navigate('/product');
             } catch (apiError) {
                 console.error("API Error:", apiError);
-                throw new Error("Failed to save product to database. Please check your internet connection and try again.");
+                throw new Error("Failed to save product to database. Please try again.");
             }
         } catch (error) {
             const errorMessage = error.message || "Failed to upload product";
@@ -373,7 +272,6 @@ const AddProduct = () => {
             // Keep the form data so user doesn't lose their input
         } finally {
             setIsSubmitting(false);
-            setRetryAttempt(0);
         }
     };
 
@@ -437,71 +335,24 @@ const AddProduct = () => {
                                 </div>
                                 <div className="mt-2">
                                     <ul className="list-disc pl-5 space-y-1 text-xs text-red-700">
-                                        {uploadError.includes("database") && (
-                                            <>
-                                                <li>Check your internet connection (mobile data or Wi-Fi)</li>
-                                                <li>Try switching to a different network</li>
-                                                <li>Reduce image size if possible</li>
-                                            </>
-                                        )}
-                                        {uploadError.includes("image") && (
-                                            <>
-                                                <li>Use a smaller image (under 1MB if possible)</li>
-                                                <li>Try a different image format (JPG works best on mobile)</li>
-                                                <li>Clear your browser cache and try again</li>
-                                            </>
-                                        )}
+                                        <li>Check your internet connection</li>
                                         <li>Verify image size (max 5MB recommended)</li>
                                         <li>Try uploading in a different file format</li>
                                         <li>Ensure all required fields are completed</li>
                                     </ul>
                                 </div>
-                                <div className="mt-3 flex space-x-2">
-                                    <button
-                                        onClick={() => setUploadError(null)}
-                                        className="text-sm font-medium text-red-600 hover:text-red-500"
-                                    >
-                                        Dismiss
-                                    </button>
-                                    {!isOnline && (
-                                        <button
-                                            onClick={() => window.location.reload()}
-                                            className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                                        >
-                                            Try Again (Refresh)
-                                        </button>
-                                    )}
-                                </div>
+                                <button
+                                    onClick={() => setUploadError(null)}
+                                    className="mt-3 text-sm font-medium text-red-600 hover:text-red-500"
+                                >
+                                    Dismiss
+                                </button>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {retryAttempt > 0 && !uploadError && (
-                    <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-yellow-800">Upload in progress</h3>
-                                <div className="mt-1 text-sm text-yellow-700">
-                                    <p>Retry attempt {retryAttempt} - Please wait while we process your request...</p>
-                                </div>
-                                <p className="text-xs text-yellow-600 mt-1">Mobile uploads may take longer due to connection limitations.</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <form 
-                    onSubmit={handleSubmit} 
-                    className="bg-white p-8 rounded-2xl shadow-xl backdrop-blur-sm bg-opacity-90 border border-gray-100"
-                    encType="multipart/form-data"
-                    noValidate
-                >
+                <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl backdrop-blur-sm bg-opacity-90 border border-gray-100">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Left column - Basic Info & Image */}
                         <div className="space-y-8">
@@ -839,11 +690,7 @@ const AddProduct = () => {
                         <button
                             type="submit"
                             disabled={isSubmitting || !formData.photo || !formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability}
-                            onClick={(e) => {
-                                if (e) e.preventDefault();
-                                handleSubmit(e);
-                            }}
-                            className={`w-full inline-flex justify-center items-center px-6 py-4 border border-transparent text-base font-medium rounded-xl shadow-md text-white ${isSubmitting || !formData.photo || !formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 active:from-indigo-800 active:to-purple-800'} transition-all duration-300`}
+                            className={`w-full inline-flex justify-center items-center px-6 py-4 border border-transparent text-base font-medium rounded-xl shadow-md text-white ${isSubmitting || !formData.photo || !formData.name || !formData.price || formData.categories.length === 0 || !formData.description || !formData.availability ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'} transition-all duration-300`}
                         >
                             {isSubmitting ? (
                                 <>
