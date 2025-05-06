@@ -84,7 +84,7 @@ export default function FeaturedProducts({ title = "Featured Products", maxProdu
           </button>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 md:gap-x-8 md:gap-y-12">
           {featuredProducts.map((product) => (
             <div 
               key={product.id}
@@ -106,40 +106,41 @@ export default function FeaturedProducts({ title = "Featured Products", maxProdu
                 )}
               </div>
 
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
-                    <svg key={i} className={`w-4 h-4 ${i < 4 ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
+                    <svg key={i} className={`w-3 h-3 sm:w-4 sm:h-4 ${i < 4 ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}
                   <span className="text-xs text-gray-500 ml-1">4.0</span>
                 </div>
-                <h3 className="font-medium text-gray-800 text-lg mb-2 truncate hover:text-orange-600 transition-colors">{product.name}</h3>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="font-bold text-xl text-gray-900">${product.price.toFixed(2)}</span>
+                <h3 className="font-medium text-gray-800 text-sm sm:text-lg mb-1 sm:mb-2 truncate hover:text-orange-600 transition-colors">{product.name}</h3>
+                <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                  <span className="font-bold text-base sm:text-xl text-gray-900">${product.price.toFixed(2)}</span>
                   {product.oldPrice && product.oldPrice > product.price && (
-                    <span className="text-gray-400 text-sm line-through">${product.oldPrice.toFixed(2)}</span>
+                    <span className="text-gray-400 text-xs sm:text-sm line-through">${product.oldPrice.toFixed(2)}</span>
                   )}
                 </div>
                 
-                <div className={`flex items-center justify-between mt-4 transition-opacity duration-300 ${hoveredProduct === product.id ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`flex items-center justify-between mt-2 sm:mt-4 transition-opacity duration-300 ${hoveredProduct === product.id ? 'opacity-100' : 'opacity-0 sm:opacity-0'}`}>
                   <button 
                     onClick={(e) => handleAddToCart(product, e)}
-                    className="px-4 py-2 bg-orange-50 text-orange-600 rounded-full text-sm font-medium hover:bg-orange-600 hover:text-white transition-colors flex items-center gap-1"
+                    className="px-2 sm:px-4 py-1.5 sm:py-2 bg-orange-50 text-orange-600 rounded-full text-xs sm:text-sm font-medium hover:bg-orange-600 hover:text-white transition-colors flex items-center gap-1"
                   >
-                    <FaShoppingCart className="w-3.5 h-3.5" />
-                    <span>Add to Cart</span>
+                    <FaShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <span className="hidden sm:inline">Add to Cart</span>
+                    <span className="sm:hidden">Add</span>
                   </button>
                   
                   <button 
                     onClick={(e) => toggleFavorite(product, e)}
-                    className="p-2.5 bg-gray-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"
+                    className="p-1.5 sm:p-2.5 bg-gray-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"
                   >
                     {wishlist.some(item => item.id === product.id) ? (
-                      <FaHeart className="w-4 h-4 text-red-500" />
+                      <FaHeart className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                     ) : (
-                      <FaRegHeart className="w-4 h-4" />
+                      <FaRegHeart className="w-3 h-3 sm:w-4 sm:h-4" />
                     )}
                   </button>
                 </div>
@@ -149,13 +150,13 @@ export default function FeaturedProducts({ title = "Featured Products", maxProdu
                 className={`absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[1px]`}
               >
                 <button 
-                  className="bg-white text-gray-800 px-6 py-3 rounded-full flex items-center space-x-2 font-medium shadow-lg hover:bg-orange-500 hover:text-white transition-colors transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                  className="bg-white text-gray-800 px-4 sm:px-6 py-2 sm:py-3 rounded-full flex items-center space-x-2 text-sm sm:text-base font-medium shadow-lg hover:bg-orange-500 hover:text-white transition-colors transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleViewProduct(product);
                   }}
                 >
-                  <FaEye className="w-4 h-4 mr-2" />
+                  <FaEye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   <span>Quick View</span>
                 </button>
               </div>
