@@ -30,7 +30,13 @@ import DynemicProductDetail from "./pages/product/DynemicProductDetail";
 import ProductDetail from "./pages/product/ProductDetail";
 import Home from "./pages/Home";
 import Coupon from "./pages/Coupon";
-import AdminDashboard from "./pages/AdminDashboard";
+
+// Admin Pages
+import AdminDashboardMain from "./pages/AdminDashboardMain";
+import AdminProducts from "./pages/AdminProducts";
+import AdminOrders from "./pages/AdminOrders";
+import AdminCustomers from "./pages/AdminCustomers";
+import AdminSettingsPage from "./pages/AdminSettingsPage";
 import AdminLogin from './component/admin/AdminLogin';
 import AdminSignup from './component/admin/AdminSignup';
 import AdminProtectedRoute from './component/AdminProtectedRoute';
@@ -77,8 +83,14 @@ export default function App() {
           <Route path="/coupon" element={<Coupon />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin-signup" element={<AdminSignup />} />
+          
+          {/* Admin Routes */}
           <Route element={<AdminProtectedRoute />}>
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-dashboard" element={<AdminDashboardMain />} />
+            <Route path="/admin-products" element={<AdminProducts />} />
+            <Route path="/admin-orders" element={<AdminOrders />} />
+            <Route path="/admin-customers" element={<AdminCustomers />} />
+            <Route path="/admin-settings" element={<AdminSettingsPage />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />
