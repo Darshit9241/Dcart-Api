@@ -3,7 +3,7 @@ import { useAdminTheme, AdminThemeProvider } from './AdminThemeContext';
 import { FaUser, FaEnvelope, FaLock, FaKey, FaCalendarAlt, FaUserTag, FaCamera } from 'react-icons/fa';
 import { FiSave, FiUpload, FiRefreshCw, FiShield } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
-import AdminLayout from '../../pages/AdminLayout';
+import AdminLayout from '../../pages/admin/AdminLayout';
 
 const AdminProfile = () => {
   const { isDarkMode } = useAdminTheme();

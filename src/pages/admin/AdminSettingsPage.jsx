@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
-import AdminSettings from '../component/admin/AdminSettings';
+import { useAdminTheme, AdminThemeProvider } from '../../component/admin/AdminThemeContext';
+import AdminSettings from '../../component/admin/AdminSettings';
 import AdminLayout from './AdminLayout';
 import { useSelector } from 'react-redux';
 

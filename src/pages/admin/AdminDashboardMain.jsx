@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
-import DashboardOverview from '../component/admin/DashboardOverview';
+import { useAdminTheme, AdminThemeProvider } from '../../component/admin/AdminThemeContext';
+import DashboardOverview from '../../component/admin/DashboardOverview';
 import AdminLayout from './AdminLayout';
 import { useSelector } from 'react-redux';
 

@@ -32,13 +32,13 @@ import Home from "./pages/Home";
 import Coupon from "./pages/Coupon";
 
 // Admin Pages
-import AdminDashboardMain from "./pages/AdminDashboardMain";
-import AdminProducts from "./pages/AdminProducts";
-import AdminOrders from "./pages/AdminOrders";
-import AdminCustomers from "./pages/AdminCustomers";
-import AdminSettingsPage from "./pages/AdminSettingsPage";
-import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
-import AdminActivityPage from "./pages/AdminActivityPage";
+import AdminDashboardMain from "./pages/admin/AdminDashboardMain";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
+import AdminActivityPage from "./pages/admin/AdminActivityPage";
 import AdminLogin from './component/admin/AdminLogin';
 import AdminSignup from './component/admin/AdminSignup';
 import AdminProtectedRoute from './component/AdminProtectedRoute';

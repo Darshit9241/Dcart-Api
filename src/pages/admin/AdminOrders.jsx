@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
-import OrderManagement from '../component/admin/OrderManagement';
+import { useAdminTheme, AdminThemeProvider } from '../../component/admin/AdminThemeContext';
+import OrderManagement from '../../component/admin/OrderManagement';
 import AdminLayout from './AdminLayout';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';

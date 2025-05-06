@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
-import CustomerManagement from '../component/admin/CustomerManagement';
+import { useAdminTheme, AdminThemeProvider } from '../../component/admin/AdminThemeContext';
+import CustomerManagement from '../../component/admin/CustomerManagement';
 import AdminLayout from './AdminLayout';
 
 const AdminCustomers = () => {

@@ -4,7 +4,7 @@ import { FaRegHeart, FaHeart, FaStar, FaShoppingCart, FaSort, FaArrowUp } from "
 import { FaCodeCompare, FaXmark, FaMagnifyingGlass } from "react-icons/fa6";
 import { HiOutlineShoppingBag, HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import { HiMiniArrowPath } from "react-icons/hi2";
-import { FiEdit, FiGrid, FiList, FiSliders, FiShare2 } from "react-icons/fi";
+import { FiEdit, FiGrid, FiList, FiSliders, FiShare2, FiInfo } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
 import { addItem, removeItem } from '../../redux/cartSlice';
@@ -35,6 +35,7 @@ export default function Product({ onCartClick, onCartOpen }) {
   // Modern UI state variables
   const [sortOption, setSortOption] = useState('newest');
   const [viewMode, setViewMode] = useState('grid');
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [showFilters, setShowFilters] = useState(false);
@@ -50,7 +51,9 @@ export default function Product({ onCartClick, onCartOpen }) {
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [page, setPage] = useState(1);
   const [gridColumns, setGridColumns] = useState(4);
+  const [showColorOptions, setShowColorOptions] = useState(false);
   const [selectedColorOption, setSelectedColorOption] = useState(null);
+  const [isSticky, setIsSticky] = useState(false);
   const productListRef = useRef(null);
   const headerRef = useRef(null);
 
@@ -98,10 +101,6 @@ export default function Product({ onCartClick, onCartOpen }) {
       })));
     }
   }, [products]);
-
-  const handleCheckout = () => {
-    navigate('/cart');
-  };
 
   // Track scrolling for sticky header effects and scroll-to-top button
   useEffect(() => {
@@ -431,13 +430,13 @@ export default function Product({ onCartClick, onCartOpen }) {
       {/* Modern Sticky Header with enhanced accessibility and mobile responsiveness */}
       <header
         ref={headerRef}
-        className={`top-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'
+        className={`sticky top-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'
           }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-3">
             <div className="flex items-center space-x-1">
-              <h1 className="text-xl font-medium text-gray-900">Dcart</h1>
+              <h1 className="text-xl font-medium text-gray-900">Shop</h1>
               {selectedCategories.length > 1 && (
                 <span className="hidden sm:inline-flex text-xs font-medium bg-black text-white px-2 py-0.5 rounded-full ml-2">
                   {selectedCategories.length > 3 
@@ -1239,14 +1238,10 @@ export default function Product({ onCartClick, onCartOpen }) {
                                 />
 
                                 {/* Category Tag */}
-                                {product.availability && product.availability !== 'Out of Stock' && (
+                                {product.category && (
                                   <div className="absolute top-2 left-2">
-                                    <span className={`text-xs px-2 py-1 rounded-full ${product.availability === 'In Stock' ? 'bg-green-100 text-green-800' :
-                                    product.availability === 'Limited Stock' ? 'bg-orange-100 text-orange-800' :
-                                      product.availability === 'Pre-order' ? 'bg-blue-100 text-blue-800' :
-                                        'bg-gray-100 text-gray-800'
-                                    }`}>
-                                    {product.availability}
+                                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${getCategoryColorClass(product.category)}`}>
+                                      {product.category}
                                     </span>
                                   </div>
                                 )}
@@ -1351,6 +1346,16 @@ export default function Product({ onCartClick, onCartOpen }) {
                                     </span>
                                   )}
                                 </div>
+
+                                {product.availability && product.availability !== 'Out of Stock' && (
+                                  <span className={`text-xs px-2 py-1 rounded-full ${product.availability === 'In Stock' ? 'bg-green-100 text-green-800' :
+                                    product.availability === 'Limited Stock' ? 'bg-orange-100 text-orange-800' :
+                                      product.availability === 'Pre-order' ? 'bg-blue-100 text-blue-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }`}>
+                                    {product.availability}
+                                  </span>
+                                )}
 
                                 {/* Product color options */}
                                 {product.colors && (
@@ -1879,7 +1884,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                     </button>
                     <span className="text-gray-300">|</span>
                     <button
-                      onClick={handleCheckout}
+                      onClick={onCartClick || (() => { })}
                       className="text-xs text-blue-600 hover:underline"
                     >
                       Checkout

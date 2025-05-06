@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useAdminTheme } from '../component/admin/AdminThemeContext';
+import { useAdminTheme } from '../../component/admin/AdminThemeContext';
 import { 
   FiPackage, FiX, FiAlertCircle, FiInfo, FiShoppingBag, 
   FiMenu, FiLogOut, FiSettings, FiBarChart2, FiChevronDown, 
@@ -11,10 +11,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
 // Import modals
-import CancelOrderModal from '../component/admin/modals/CancelOrderModal';
-import OrderDetailsModal from '../component/admin/modals/OrderDetailsModal';
-import UserDetailsModal from '../component/admin/modals/UserDetailsModal';
-import ProductDetailsModal from '../component/admin/modals/ProductDetailsModal';
+import CancelOrderModal from '../../component/admin/modals/CancelOrderModal';
+import OrderDetailsModal from '../../component/admin/modals/OrderDetailsModal';
+import UserDetailsModal from '../../component/admin/modals/UserDetailsModal';
+import ProductDetailsModal from '../../component/admin/modals/ProductDetailsModal';
 import { useSelector } from 'react-redux';
 
 const AdminLayout = ({ children, activeTab }) => {
@@ -247,7 +247,7 @@ const AdminLayout = ({ children, activeTab }) => {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       {/* Top Navigation Bar */}
-      <header className={`fixed top-0 left-0 right-0 z-30 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b shadow-sm py-2.5 flex items-center px-4`}>
+      <header className={`fixed top-0 left-0 right-0 z-30 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b shadow-sm py-1.5 flex items-center px-4`}>
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button 

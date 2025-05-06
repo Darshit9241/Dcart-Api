@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
-import ProductManagement from '../component/admin/ProductManagement';
+import { useAdminTheme, AdminThemeProvider } from '../../component/admin/AdminThemeContext';
+import ProductManagement from '../../component/admin/ProductManagement';
 import AdminLayout from './AdminLayout';
 import { useSelector, useDispatch } from 'react-redux';
-import { removeProduct } from '../redux/productSlice';
+import { removeProduct } from '../../redux/productSlice';
 import { useNavigate } from 'react-router-dom';
-import defaultProducts from '../component/ProductData';
+import defaultProducts from '../../component/ProductData';
 
 const AdminProducts = () => {
   const { isDarkMode } = useAdminTheme();

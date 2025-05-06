@@ -6,7 +6,7 @@ import {
   FiFilter, FiCalendar, FiSearch
 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
-import AdminLayout from '../../pages/AdminLayout';
+import AdminLayout from '../../pages/admin/AdminLayout';
 
 const AdminNotifications = () => {
   const { isDarkMode } = useAdminTheme();

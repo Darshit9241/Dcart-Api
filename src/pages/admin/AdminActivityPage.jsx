@@ -1,6 +1,6 @@
 import React from 'react';
-import { useAdminTheme, AdminThemeProvider } from '../component/admin/AdminThemeContext';
-import AdminActivity from '../component/admin/AdminActivity';
+import { useAdminTheme, AdminThemeProvider } from '../../component/admin/AdminThemeContext';
+import AdminActivity from '../../component/admin/AdminActivity';
 import AdminLayout from './AdminLayout';
 
 const AdminActivityPage = () => {
