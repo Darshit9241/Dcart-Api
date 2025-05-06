@@ -4,7 +4,7 @@ import { FaRegHeart, FaHeart, FaStar, FaShoppingCart, FaSort, FaArrowUp } from "
 import { FaCodeCompare, FaXmark, FaMagnifyingGlass } from "react-icons/fa6";
 import { HiOutlineShoppingBag, HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import { HiMiniArrowPath } from "react-icons/hi2";
-import { FiEdit, FiGrid, FiList, FiSliders, FiShare2, FiInfo } from "react-icons/fi";
+import { FiEdit, FiGrid, FiList, FiSliders, FiShare2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
 import { addItem, removeItem } from '../../redux/cartSlice';
@@ -35,7 +35,6 @@ export default function Product({ onCartClick, onCartOpen }) {
   // Modern UI state variables
   const [sortOption, setSortOption] = useState('newest');
   const [viewMode, setViewMode] = useState('grid');
-  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [showFilters, setShowFilters] = useState(false);
@@ -51,9 +50,7 @@ export default function Product({ onCartClick, onCartOpen }) {
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [page, setPage] = useState(1);
   const [gridColumns, setGridColumns] = useState(4);
-  const [showColorOptions, setShowColorOptions] = useState(false);
   const [selectedColorOption, setSelectedColorOption] = useState(null);
-  const [isSticky, setIsSticky] = useState(false);
   const productListRef = useRef(null);
   const headerRef = useRef(null);
 
@@ -101,6 +98,10 @@ export default function Product({ onCartClick, onCartOpen }) {
       })));
     }
   }, [products]);
+
+  const handleCheckout = () => {
+    navigate('/cart');
+  };
 
   // Track scrolling for sticky header effects and scroll-to-top button
   useEffect(() => {
@@ -1884,7 +1885,7 @@ export default function Product({ onCartClick, onCartOpen }) {
                     </button>
                     <span className="text-gray-300">|</span>
                     <button
-                      onClick={onCartClick || (() => { })}
+                      onClick={handleCheckout}
                       className="text-xs text-blue-600 hover:underline"
                     >
                       Checkout
