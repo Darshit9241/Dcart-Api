@@ -194,8 +194,8 @@ const EditProduct = () => {
             
             toast.success("Product updated successfully!");
             
-            // Navigate back to admin products page
-            navigate('/admin-products');
+            // Navigate to product section
+            navigate('/product');
         } catch (error) {
             const errorMessage = error.message || "Failed to update product";
             toast.error(errorMessage);
