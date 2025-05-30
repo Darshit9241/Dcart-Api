@@ -636,7 +636,7 @@ const AdminLayout = ({ children, activeTab }) => {
         
         {/* Sidebar - Modernized */}
         <aside 
-          className={`fixed md:sticky top-14 md:top-16 left-0 z-20 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] transition-all duration-300 ${
+          className={`hide-scrollbar fixed md:sticky top-14 md:top-16 left-0 z-20 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] transition-all duration-300 ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           } ${
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
@@ -717,7 +717,7 @@ const AdminLayout = ({ children, activeTab }) => {
             {!isCollapsed && (
               <div className="mt-6">
                 <h3 className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} px-4 mb-2`}>Recent Activity</h3>
-                <div className={`space-y-1 mt-1 max-h-40 overflow-y-auto scrollbar-thin ${
+                <div className={`space-y-1 mt-1 max-h-40 overflow-y-auto scrollbar-thin hide-scrollbar ${
                   isDarkMode ? 'scrollbar-thumb-gray-600 scrollbar-track-transparent' : 'scrollbar-thumb-gray-300 scrollbar-track-transparent'
                 }`}>
                   {recentActivities.slice(0, 3).map((activity, index) => (
